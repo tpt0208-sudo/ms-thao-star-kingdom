@@ -2549,13 +2549,14 @@ app.post("/api/news/:id/restore", (req, res) => {
   });
 });
 app.post("/api/resources", (req, res) => {
-  const { title, category, type, url, description, author, grade } = req.body;
+  const { title, category, type, url, thumbnailUrl, description, author, grade } = req.body;
   const resource = {
     id: `res_${Date.now()}`,
     title,
     category: category || "other",
     type: type || "video",
     url: url || "",
+    thumbnailUrl: thumbnailUrl || "",
     description: description || "",
     author: author || "C\xF4 Th\u1EA3o",
     grade: Number(grade) || 2,

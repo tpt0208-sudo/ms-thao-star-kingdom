@@ -2960,13 +2960,14 @@ app.post('/api/news/:id/restore', (req: Request, res: Response) => {
 
 // Learning Library: 4 categories (video, image, book, other)
 app.post('/api/resources', (req: Request, res: Response) => {
-  const { title, category, type, url, description, author, grade } = req.body;
+  const { title, category, type, url, thumbnailUrl, description, author, grade } = req.body;
   const resource: LearningResource = {
     id: `res_${Date.now()}`,
     title,
     category: category || 'other',
     type: type || 'video',
     url: url || '',
+    thumbnailUrl: thumbnailUrl || '',
     description: description || '',
     author: author || 'Cô Thảo',
     grade: Number(grade) || 2,

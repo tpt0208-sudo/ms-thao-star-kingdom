@@ -25,8 +25,12 @@ import {
   Pin,
   Flame,
   Music,
+  Play,
+  Film,
+  X,
 } from 'lucide-react';
 import { playStarSound, triggerGrandCelebration } from '../utils/effects';
+import { resolveResourceThumbnail, isVideoResource, getYouTubeVideoId } from './LearningLibraryView';
 
 interface StudentPortalViewProps {
   appState: AppState;
@@ -51,6 +55,7 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
   const [loading, setLoading] = useState(false);
   const [studentTab, setStudentTab] = useState<'rewards' | 'library' | 'news' | 'halloffame' | 'myqr'>('rewards');
   const [myQrUrl, setMyQrUrl] = useState<string>('');
+  const [previewResource, setPreviewResource] = useState<LearningResource | null>(null);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
@@ -348,39 +353,96 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {appState.learningResources.map((res) => (
-              <div
-                key={res.id}
-                className="bg-sky-50/50 hover:bg-sky-50 rounded-2xl p-4 border border-sky-200 transition-all shadow-xs flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-200 text-sky-800">
-                      {res.category.toUpperCase()}
-                    </span>
-                    <span className="text-xs font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">
-                      {res.type.toUpperCase()}
-                    </span>
-                  </div>
-                  <h4 className="font-bold text-slate-800 text-sm mb-1 leading-snug">
-                    {res.title}
-                  </h4>
-                  <p className="text-xs text-slate-500 font-medium mb-3">
-                    {res.description}
-                  </p>
-                </div>
+            {appState.learningResources.map((res) => {
+              const thumb = resolveResourceThumbnail(res);
+              const isVid = isVideoResource(res.url, res.type, res.category);
 
-                <a
-                  href={res.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full py-2 bg-[#1E3A8A] hover:bg-[#172554] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+              return (
+                <div
+                  key={res.id}
+                  className="bg-white hover:bg-sky-50/40 rounded-2xl p-3.5 border border-sky-100 hover:border-sky-300 transition-all shadow-xs hover:shadow-md flex flex-col justify-between overflow-hidden group"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Mở bài học</span>
-                </a>
-              </div>
-            ))}
+                  <div>
+                    {/* Thumbnail Image Container */}
+                    <div
+                      onClick={() => setPreviewResource(res)}
+                      className="relative w-full aspect-video rounded-xl overflow-hidden mb-3 bg-slate-900 cursor-pointer flex items-center justify-center group-hover:opacity-95 transition"
+                    >
+                      {thumb ? (
+                        <img
+                          src={thumb}
+                          alt={res.title}
+                          className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-sky-500 to-indigo-600 text-white p-3 text-center">
+                          {isVid ? <Film className="w-8 h-8 opacity-90" /> : <BookOpen className="w-8 h-8 opacity-90" />}
+                          <span className="text-[11px] font-bold mt-1 text-sky-100">{res.category.toUpperCase()}</span>
+                        </div>
+                      )}
+
+                      {/* Play badge overlay if video */}
+                      {isVid && (
+                        <div className="absolute inset-0 bg-black/25 flex items-center justify-center group-hover:bg-black/40 transition">
+                          <div className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg transform group-hover:scale-110 transition">
+                            <Play className="w-5 h-5 fill-current ml-0.5" />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Category Chip */}
+                      <span className="absolute top-2 left-2 text-[10px] font-black px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-white">
+                        {res.category.toUpperCase()}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-black text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">
+                        {res.type.toUpperCase()}
+                      </span>
+                      {res.author && (
+                        <span className="text-[10.5px] text-slate-400 font-semibold truncate max-w-[130px]">
+                          {res.author}
+                        </span>
+                      )}
+                    </div>
+
+                    <h4 className="font-bold text-slate-800 text-sm mb-1 leading-snug line-clamp-2 group-hover:text-sky-700 transition">
+                      {res.title}
+                    </h4>
+                    {res.description && (
+                      <p className="text-xs text-slate-500 line-clamp-2 mb-3">
+                        {res.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewResource(res)}
+                      className="flex-1 py-2 bg-[#1E3A8A] hover:bg-[#172554] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                    >
+                      {isVid ? <Play className="w-3.5 h-3.5 fill-current" /> : <BookOpen className="w-3.5 h-3.5" />}
+                      <span>{isVid ? 'Xem video ngay' : 'Mở bài học'}</span>
+                    </button>
+
+                    {res.url && !res.url.startsWith('data:') && (
+                      <a
+                        href={res.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition shrink-0"
+                        title="Mở trong tab mới"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -529,6 +591,103 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
               <Download className="w-3.5 h-3.5" />
               Tải thẻ QR về máy
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* PREVIEW RESOURCE MODAL */}
+      {previewResource && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+            <div className="p-4 bg-gradient-to-r from-sky-600 to-indigo-700 text-white flex items-center justify-between">
+              <div className="min-w-0 pr-4">
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/20 text-white">
+                  {previewResource.category} • {previewResource.type}
+                </span>
+                <h3 className="text-base font-bold truncate mt-1">{previewResource.title}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewResource(null)}
+                className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition shrink-0 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 overflow-y-auto flex-1 bg-slate-950 flex items-center justify-center min-h-[340px]">
+              {(() => {
+                const ytId = getYouTubeVideoId(previewResource.url);
+                if (ytId) {
+                  return (
+                    <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-lg bg-black">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
+                        title={previewResource.title}
+                        className="w-full h-full border-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                      />
+                    </div>
+                  );
+                }
+
+                if (isVideoResource(previewResource.url, previewResource.type, previewResource.category)) {
+                  return (
+                    <video
+                      src={previewResource.url}
+                      controls
+                      autoPlay
+                      playsInline
+                      className="w-full max-h-[70vh] rounded-2xl bg-black shadow-lg"
+                    />
+                  );
+                }
+
+                if (previewResource.category === 'image' || previewResource.type === 'image') {
+                  return (
+                    <img
+                      src={previewResource.url}
+                      alt={previewResource.title}
+                      className="max-h-[70vh] w-auto max-w-full object-contain rounded-2xl"
+                    />
+                  );
+                }
+
+                return (
+                  <div className="p-8 text-center text-white space-y-4">
+                    <BookOpen className="w-16 h-16 text-sky-400 mx-auto" />
+                    <p className="text-sm font-semibold text-slate-200 max-w-md mx-auto">
+                      {previewResource.description || 'Tài liệu học tập kỳ diệu dành cho em.'}
+                    </p>
+                    {previewResource.url && (
+                      <a
+                        href={previewResource.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs shadow-md transition"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        <span>Mở tài liệu học tập</span>
+                      </a>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {previewResource.description && (
+              <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                <p className="italic line-clamp-2">{previewResource.description}</p>
+                <button
+                  type="button"
+                  onClick={() => setPreviewResource(null)}
+                  className="px-4 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 font-bold text-slate-700 text-xs shrink-0 cursor-pointer ml-4"
+                >
+                  Đóng
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1302,7 +1302,8 @@
       "type": "video",
       "url": "https://www.youtube.com/watch?v=saF3-f0XWAY",
       "description": "Video luyện phát âm chuẩn các âm ghép Tiếng Anh lớp 2.",
-      "createdAt": "2026-10-20"
+      "createdAt": "2026-10-20",
+      "thumbnailUrl": "https://img.youtube.com/vi/saF3-f0XWAY/hqdefault.jpg"
     },
     {
       "id": "res_2",
@@ -1312,7 +1313,8 @@
       "type": "image",
       "url": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600",
       "description": "Bộ sưu tập hình ảnh các tổ hào hứng làm thí nghiệm khoa học vui.",
-      "createdAt": "2026-10-22"
+      "createdAt": "2026-10-22",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600"
     },
     {
       "id": "res_3",
@@ -1323,7 +1325,8 @@
       "author": "Ms. Thao",
       "url": "https://example.com/books/little-star.pdf",
       "description": "Truyện tranh ngắn bồi dưỡng tình yêu đọc sách và vốn từ vựng cơ bản.",
-      "createdAt": "2026-10-23"
+      "createdAt": "2026-10-23",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600"
     },
     {
       "id": "res_4",
@@ -1333,7 +1336,8 @@
       "type": "game",
       "url": "https://example.com/game/star-math-2a5",
       "description": "Trò chơi tính nhẩm nhanh giành huy hiệu sao vương quốc.",
-      "createdAt": "2026-10-25"
+      "createdAt": "2026-10-25",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=600"
     }
   ],
   "levelRules": [
