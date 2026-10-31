@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ms-thao-star-kingdom
+    name: vuong-quoc-ngoi-sao
     runtime: node
     plan: free
     region: oregon
