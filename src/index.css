@@ -1,0 +1,213 @@
+@import "tailwindcss";
+
+:root {
+  /* Primary Font Stack - Full Vietnamese Diacritics & Elementary EdTech Readability */
+  --font-primary: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Desktop Reference Typography Scale (Responsive) */
+  --fs-title-main: clamp(1.4rem, 1.25rem + 0.75vw, 1.75rem);      /* 22.4px – 28px */
+  --fs-title-section: clamp(1.15rem, 1.08rem + 0.35vw, 1.3125rem); /* 18.4px – 21px */
+  --fs-card-title: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);         /* 16px – 18px */
+
+  /* Bilingual UI Tokens (Menu, Buttons, Form Labels) */
+  --fs-ui-vi: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);             /* 15px – 16px */
+  --fs-ui-en: clamp(0.75rem, 0.73rem + 0.1vw, 0.8125rem);          /* 12px – 13px */
+
+  /* Regular Body Content */
+  --fs-body-vi: clamp(0.9375rem, 0.9rem + 0.2vw, 1.0625rem);       /* 15px – 17px */
+  --fs-body-en: clamp(0.8125rem, 0.78rem + 0.12vw, 0.875rem);      /* 13px – 14px */
+
+  /* Popup & Notification */
+  --fs-modal-vi: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);          /* 16px – 18px */
+  --fs-modal-en: clamp(0.8125rem, 0.79rem + 0.12vw, 0.875rem);     /* 13px – 14px */
+
+  /* Statistical Numbers */
+  --fs-stat-number: clamp(1.625rem, 1.45rem + 0.85vw, 2rem);       /* 26px – 32px */
+
+  /* High-Contrast Pastel-Friendly Text Colors (WCAG 2.2 AA) */
+  --color-text-primary: #1E293B;
+  --color-text-heading: #1E3A8A;
+  --color-text-vi: #1E293B;
+  --color-text-en: #475569;
+  --color-text-en-accent: #0369A1;
+  --spacing-bi-gap: 2px;
+}
+
+@layer base {
+  *, ::before, ::after {
+    font-family: var(--font-primary);
+  }
+
+  html {
+    font-size: 16px;
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-primary);
+    font-size: var(--fs-body-vi);
+    line-height: 1.5;
+    color: var(--color-text-primary);
+    letter-spacing: -0.005em;
+  }
+
+  h1, h2, h3, h4, h5, h6, button, input, select, textarea {
+    font-family: var(--font-primary);
+  }
+
+  /* Upgrade micro font utilities so no text is ever too tiny or unreadable */
+  .text-\[8px\],
+  .text-\[9px\],
+  .text-\[10px\] {
+    font-size: 0.75rem; /* 12px minimum readable size */
+    line-height: 1.35;
+  }
+
+  .text-\[11px\] {
+    font-size: 0.8125rem; /* 13px */
+    line-height: 1.38;
+  }
+
+  .text-xs {
+    font-size: 0.84375rem; /* 13.5px */
+    line-height: 1.42;
+  }
+
+  .text-sm {
+    font-size: 0.9375rem; /* 15px */
+    line-height: 1.45;
+  }
+
+  .text-base {
+    font-size: 1.03125rem; /* 16.5px */
+    line-height: 1.5;
+  }
+
+  /* Improve secondary text contrast on pastel backgrounds */
+  .text-slate-400 {
+    color: #475569;
+  }
+
+  .text-slate-500 {
+    color: #334155;
+  }
+}
+
+/* ================= BILINGUAL TYPOGRAPHY DESIGN SYSTEM CLASSES ================= */
+
+.typo-title-main {
+  font-size: var(--fs-title-main);
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+.typo-title-section {
+  font-size: var(--fs-title-section);
+  font-weight: 900;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.typo-stat-number {
+  font-size: var(--fs-stat-number);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* Standard 2-line Bilingual Block: Vietnamese on top, English below */
+.bi-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-bi-gap);
+  min-width: 0;
+}
+
+.bi-vi {
+  font-size: var(--fs-ui-vi);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.bi-en {
+  font-size: var(--fs-ui-en);
+  font-weight: 700;
+  line-height: 1.28;
+  opacity: 0.92;
+}
+
+.bi-body-vi {
+  font-size: var(--fs-body-vi);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.bi-body-en {
+  font-size: var(--fs-body-en);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text-en);
+}
+
+.bi-modal-vi {
+  font-size: var(--fs-modal-vi);
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.bi-modal-en {
+  font-size: var(--fs-modal-en);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom scrollbars for friendly edtech feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}

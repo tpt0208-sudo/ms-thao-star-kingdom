@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isTeacher() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'teacher' || 
+        request.auth.token.admin == true ||
+        request.auth.token.email.matches('.*teacher.*') ||
+        request.auth.token.email.matches('.*hpu2.edu.vn')
+      );
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Schools
+    match /schools/{schoolId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+
+    // Classes
+    match /classes/{classId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+
+      // Students inside class
+      match /students/{studentId} {
+        // Teacher can read/write all students. Student can read their own profile.
+        allow read: if isTeacher() || (isAuthenticated() && (request.auth.uid == studentId || request.auth.token.studentCode != null));
+        // Only teachers can modify student records, levels, and star balances
+        allow write: if isTeacher();
+      }
+
+      // 4 Teams in class
+      match /teams/{teamId} {
+        allow read: if isAuthenticated();
+        allow write: if isTeacher();
+      }
+
+      // Star Transactions (Audit log)
+      match /starTransactions/{txId} {
+        // Class members can read transaction feed; only teacher can insert
+        allow read: if isAuthenticated();
+        allow create: if isTeacher();
+        // Transactions are immutable audit records
+        allow update, delete: if isTeacher();
+      }
+
+      // Attendance records
+      match /attendance/{date} {
+        allow read: if isTeacher();
+        allow write: if isTeacher();
+      }
+
+      // Seating chart
+      match /seating/{chartId} {
+        allow read: if isAuthenticated();
+        allow write: if isTeacher();
+      }
+
+      // Class News
+      match /news/{newsId} {
+        allow read: if isAuthenticated() && resource.data.visibility != 'teachers' || isTeacher();
+        allow write: if isTeacher();
+      }
+
+      // Class Notifications
+      match /notifications/{notificationId} {
+        allow read: if isAuthenticated();
+        allow write: if isTeacher();
+      }
+    }
+
+    // User Notification Reads (per-user read states)
+    match /users/{userId}/notificationReads/{notificationId} {
+      allow read, write: if isAuthenticated() && (request.auth.uid == userId || isTeacher());
+    }
+
+    // Global Reward Catalog
+    match /rewards/{rewardId} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
+    // Redemptions
+    match /redemptions/{redemptionId} {
+      allow read: if isTeacher() || (isAuthenticated() && resource.data.studentId == request.auth.uid);
+      allow create: if isAuthenticated();
+      allow update, delete: if isTeacher();
+    }
+
+    // Learning Resources
+    match /learningResources/{resourceId} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+  }
+}
+

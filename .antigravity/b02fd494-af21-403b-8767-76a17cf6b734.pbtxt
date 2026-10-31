@@ -1,0 +1,508 @@
+steps {
+  type: CORTEX_STEP_TYPE_USER_INPUT
+  status: CORTEX_STEP_STATUS_DONE
+  metadata {
+    created_at {
+      seconds: 1793415967
+      nanos: 588229000
+    }
+    source: CORTEX_STEP_SOURCE_SYSTEM
+    completed_at {
+      seconds: 1793415967
+      nanos: 588229000
+    }
+  }
+  user_input {
+    user_response: "Here is the full initial file tree for the application:\n/.env.example\n/.gitignore\n/bun.lock\n/data/db.json\n/firebase-applet-config.json\n/firebase-blueprint.json\n/firestore.rules\n/index.html\n/metadata.json\n/package.json\n/public/assets/aistudio/demo2full_0ffc2909.png\n/public/assets/aistudio/demo_e72485c9.png\n/public/assets/kingdom/hero_banner.png\n/public/assets/kingdom/hero_banner_v2.png\n/public/assets/kingdom/mobile_mascot.png\n/public/assets/kingdom/mobile_mascot_v2.png\n/public/assets/kingdom/nav_halloffame.png\n/public/assets/kingdom/nav_home.png\n/public/assets/kingdom/nav_library.png\n/public/assets/kingdom/nav_news.png\n/public/assets/kingdom/nav_randompicker.png\n/public/assets/kingdom/nav_rewards.png\n/public/assets/kingdom/nav_students.png\n/public/assets/kingdom/nav_teams.png\n/public/assets/kingdom/school_logo.png\n/public/assets/kingdom/school_logo_v2.png\n/public/assets/kingdom/sidebar_logo.png\n/public/assets/kingdom/sidebar_mascot.png\n/public/assets/kingdom/sidebar_mascot_v2.png\n/public/assets/kingdom/student_anh.png\n/public/assets/kingdom/student_huy.png\n/public/assets/kingdom/student_minh.png\n/public/assets/kingdom/student_ngoc.png\n/public/assets/kingdom/student_qminh.png\n/public/assets/kingdom/teacher_avatar.png\n/public/manifest.json\n/public/sw.js\n/scripts/cropAssets.js\n/scripts/cropFullMockup.js\n/scripts/cropMore.js\n/server.js\n/server.ts\n/src/App.tsx\n/src/assets/images/regenerated_image_1793415781075.jpg\n/src/components/ClassNewsView.tsx\n/src/components/ClassQRCodeModal.tsx\n/src/components/ClassTeamsView.tsx\n/src/components/ClassroomToolsView.tsx\n/src/components/CreateClassModal.tsx\n/src/components/DeleteClassModal.tsx\n/src/components/EditTeamModal.tsx\n/src/components/HallOfFameView.tsx\n/src/components/Header.tsx\n/src/components/HeroBanner.tsx\n/src/components/HomeDashboard.tsx\n/src/components/ImageCropModal.tsx\n/src/components/LearningLibraryView.tsx\n/src/components/LoginPage.tsx\n/src/components/MenuIcon.tsx\n/src/components/NavigationCards.tsx\n/src/components/NotificationDetailModal.tsx\n/src/components/NotificationsDrawer.tsx\n/src/components/RandomPickerView.tsx\n/src/components/RewardsView.tsx\n/src/components/SchoolEmblem.tsx\n/src/components/SettingsBackupView.tsx\n/src/components/SettingsModal.tsx\n/src/components/Sidebar.tsx\n/src/components/StarPopover.tsx\n/src/components/StudentCard.tsx\n/src/components/StudentPortalView.tsx\n/src/components/StudentsView.tsx\n/src/components/ToastNotification.tsx\n/src/index.css\n/src/main.tsx\n/src/services/api.ts\n/src/services/firebase.ts\n/src/services/offlineSync.ts\n/src/types.ts\n/src/utils/audioManager.ts\n/src/utils/effects.ts\n/src/utils/timePeriodService.ts\n/tsconfig.json\n/vite.config.ts\n\nThe following dependencies are installed:\n@google/genai: ^2.4.0\n@tailwindcss/vite: ^4.3.3\n@vitejs/plugin-react: ^6.1.1\ncanvas-confetti: ^1.9.4\ndotenv: ^17.2.3\nexpress: ^4.21.2\nfirebase: ^13.1.0\nlucide-react: ^0.546.0\nmotion: ^12.23.24\nqrcode: ^1.5.4\nreact: ^19.0.1\nreact-dom: ^19.0.1\nsharp: ^0.35.5\nvite: ^8.3.0\nxlsx: ^0.18.5\n\nThe following devDependencies are installed:\n@types/canvas-confetti: ^1.9.0\n@types/express: ^4.17.21\n@types/node: ^22.14.0\n@types/qrcode: ^1.5.6\n@types/react: ^19.3.0\n@types/react-dom: ^19.3.0\nautoprefixer: ^10.4.21\nesbuild: ^0.25.0\ntailwindcss: ^4.3.3\ntsx: ^4.21.0\ntypescript: ^7.0.2\n\nKey file contents:\n\n--- /.env.example ---\n```\n# GEMINI_API_KEY: Required for Gemini AI API calls.\n# AI Studio automatically injects this at runtime from user secrets.\n# Users configure this via the Secrets panel in the AI Studio UI.\nGEMINI_API_KEY=\"MY_GEMINI_API_KEY\"\n\n# APP_URL: The URL where this applet is hosted.\n# AI Studio automatically injects this at runtime with the Cloud Run service URL.\n# Used for self-referential links, OAuth callbacks, and API endpoints.\nAPP_URL=\"MY_APP_URL\"\n\n```\n\n--- /firebase-applet-config.json ---\n```json\n{\n  \"projectId\": \"marklar-fiber-7vr20\",\n  \"appId\": \"1:352651636087:web:793fe5238e54c70b0d0572\",\n  \"apiKey\": \"AIzaSyDkPI8NxEWbQ4k2dhTUJNSwqGYr83o0pAc\",\n  \"authDomain\": \"marklar-fiber-7vr20.firebaseapp.com\",\n  \"firestoreDatabaseId\": \"ai-studio-remixverokmsthao-b02fd494-af21-403b-8767-76a17cf6b734\",\n  \"storageBucket\": \"marklar-fiber-7vr20.firebasestorage.app\",\n  \"messagingSenderId\": \"352651636087\",\n  \"measurementId\": \"\",\n  \"oAuthClientId\": \"352651636087-d5qkhqu4v6en4p6ikj4eq2inm3fq41f3.apps.googleusercontent.com\",\n  \"recaptchaSiteKey\": \"\"\n}\n```\n\n--- /index.html ---\n```html\n<!doctype html>\n<html lang=\"vi\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Ms. Thao\'s Star Kingdom - V\306\260\306\241ng qu\341\273\221c ng\303\264i sao</title>\n    <meta name=\"description\" content=\"H\341\273\207 th\341\273\221ng qu\341\272\243n l\303\275 l\341\273\233p h\341\273\215c ti\341\273\203u h\341\273\215c song ng\341\273\257 Anh - Vi\341\273\207t, qu\341\272\243n l\303\275 thi \304\221ua 4 t\341\273\225, c\341\273\231ng tr\341\273\253 sao tr\341\273\261c ti\341\272\277p tr\303\252n sticker h\341\273\215c sinh, \304\221i\341\273\203m danh, \304\221\341\273\225i th\306\260\341\273\237ng v\303\240 vinh danh.\" />\n    <meta property=\"og:title\" content=\"Ms. Thao\'s Star Kingdom - V\306\260\306\241ng qu\341\273\221c ng\303\264i sao\" />\n    <meta property=\"og:description\" content=\"H\341\273\207 th\341\273\221ng qu\341\272\243n l\303\275 l\341\273\233p h\341\273\215c ti\341\273\203u h\341\273\215c song ng\341\273\257 Anh - Vi\341\273\207t, qu\341\272\243n l\303\275 thi \304\221ua 4 t\341\273\225, c\341\273\231ng tr\341\273\253 sao tr\341\273\261c ti\341\272\277p tr\303\252n sticker h\341\273\215c sinh, \304\221i\341\273\203m danh, \304\221\341\273\225i th\306\260\341\273\237ng v\303\240 vinh danh.\" />\n    <meta property=\"og:type\" content=\"website\" />\n    <meta name=\"twitter:card\" content=\"summary_large_image\" />\n    <meta name=\"theme-color\" content=\"#47B5FF\" />\n    <link rel=\"manifest\" href=\"/manifest.json\" />\n    <link rel=\"icon\" type=\"image/png\" href=\"/assets/kingdom/school_logo_v2.png\" />\n    <link rel=\"apple-touch-icon\" href=\"/assets/kingdom/school_logo_v2.png\" />\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap\" rel=\"stylesheet\">\n  </head>\n  <body class=\"bg-[#F0F8FF] font-[\'Nunito\',sans-serif] text-[#263C72] antialiased select-none\">\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx\"></script>\n    <script>\n      if (\'serviceWorker\' in navigator && window.location.protocol.startsWith(\'http\')) {\n        window.addEventListener(\'load\', () => {\n          navigator.serviceWorker.register(\'/sw.js\').catch((err) => {\n            console.debug(\'ServiceWorker registration skipped:\', err);\n          });\n        });\n      }\n    </script>\n  </body>\n</html>\n\n\n```\n\n--- /metadata.json ---\n```json\n{\n  \"name\": \"Remix verokMs. Thao\\u0027s Star Kingdom - V\306\260\306\241ng qu\341\273\221c ng\303\264i saochecklai\",\n  \"description\": \"H\341\273\207 th\341\273\221ng qu\341\272\243n l\303\275 l\341\273\233p h\341\273\215c ti\341\273\203u h\341\273\215c song ng\341\273\257 Anh - Vi\341\273\207t\",\n  \"requestFramePermissions\": [],\n  \"majorCapabilities\": [\n    \"MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API\"\n  ]\n}\n```\n\n--- /src/App.tsx ---\n```typescript\nimport React, { useState, useEffect } from \'react\';\nimport { AppState, Role, Student, LibraryCategory, StarTransaction, ClassInfo, AppNotification } from \'./types\';\nimport { api } from \'./services/api\';\nimport { offlineSync } from \'./services/offlineSync\';\nimport { Header } from \'./components/Header\';\nimport { Sidebar, NavTab, navItems, settingsItem } from \'./components/Sidebar\';\nimport { HeroBanner } from \'./components/HeroBanner\';\nimport { NavigationCards } from \'./components/NavigationCards\';\nimport { HomeDashboard } from \'./components/HomeDashboard\';\nimport { StudentsView } from \'./components/StudentsView\';\nimport { ClassTeamsView } from \'./components/ClassTeamsView\';\nimport { RewardsView } from \'./components/RewardsView\';\nimport { HallOfFameView } from \'./components/HallOfFameView\';\nimport { ClassroomToolsView } from \'./components/ClassroomToolsView\';\nimport { ClassNewsView } from \'./components/ClassNewsView\';\nimport { LearningLibraryView } from \'./components/LearningLibraryView\';\nimport { SettingsBackupView } from \'./components/SettingsBackupView\';\nimport { CreateClassModal } from \'./components/CreateClassModal\';\nimport { StudentPortalView } from \'./components/StudentPortalView\';\nimport { LoginPage } from \'./components/LoginPage\';\nimport { ClassQRCodeModal } from \'./components/ClassQRCodeModal\';\nimport { MenuIcon } from \'./components/MenuIcon\';\nimport { DeleteClassModal } from \'./components/DeleteClassModal\';\nimport { NotificationsDrawer } from \'./components/NotificationsDrawer\';\nimport { NotificationDetailModal } from \'./components/NotificationDetailModal\';\nimport { ToastNotification, ActiveToast } from \'./components/ToastNotification\';\nimport { playStarSound, triggerGrandCelebration, stopCelebration } from \'./utils/effects\';\n\nimport {\n  Bell,\n  X,\n  Star,\n  Users,\n  Trophy,\n  Gift,\n  Dice5,\n  BookOpen,\n  Megaphone,\n  Home as HomeIcon,\n  Sparkles,\n  Briefcase,\n  Layers,\n} from \'lucide-react\';\n\nexport default function App() {\n  const [appState, setAppState] = useState<AppState | null>(null);\n  const [loading, setLoading] = useState(true);\n  const [error, setError] = useState<string | null>(null);\n\n  // Navigation & Role\n  const [currentTab, setCurrentTab] = useState<NavTab>(\'home\');\n  const [currentRole, setCurrentRole] = useState<Role>(\'teacher\');\n  const [currentStudent, setCurrentStudent] = useState<Student | null>(null);\n\n  // Sub-navigation presets\n  const [selectedToolTab, setSelectedToolTab] = useState<\'noise\' | \'timer\' | \'picker\'>(\'noise\');\n  const [selectedLibraryCategory, setSelectedLibraryCategory] = useState<LibraryCategory | \'all\'>(\'all\');\n\n  // Modals & Drawers\n  const [isCreateClassOpen, setIsCreateClassOpen] = useState(false);\n  const [headerClassToDelete, setHeaderClassToDelete] = useState<ClassInfo | null>(null);\n  const [isSettingsOpen, setIsSettingsOpen] = useState(false);\n  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);\n  const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);\n  const [activeToasts, setActiveToasts] = useState<ActiveToast[]>([]);\n  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);\n  const [isQrModalOpen, setIsQrModalOpen] = useState(false);\n\n  // Authentication & Current User State\n  const [currentUserInfo, setCurrentUserInfo] = useState<{ id: string; email?: string; name: string }>(() => {\n    if (typeof window !== \'undefined\') {\n      try {\n        const saved = localStorage.getItem(\'starkingdom_auth\');\n        if (saved) {\n          const parsed = JSON.parse(saved);\n          const uId = parsed.userId || parsed.email || (parsed.studentId ? `student_${parsed.studentId}` : \'teacher_thao\');\n          return {\n            id: uId,\n            email: parsed.email,\n            name: parsed.displayName || parsed.fullName || \'C\303\264 Th\341\272\243o\',\n          };\n        }\n      } catch (e) {\n        // ignore\n      }\n    }\n    return { id: \'teacher_thao\', email: \'tpt0208@gmail.com\', name: \'C\303\264 Th\341\272\243o\' };\n  });\n\n  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {\n    if (typeof window !== \'undefined\') {\n      const params = new URLSearchParams(window.location.search);\n      if (params.get(\'portal\') === \'student\' || params.get(\'code\') || params.get(\'student\')) {\n        return true;\n      }\n      try {\n        const saved = localStorage.getItem(\'starkingdom_auth\');\n        if (saved) {\n          const parsed = JSON.parse(saved);\n          return !!parsed.authenticated;\n        }\n      } catch (e) {\n        // ignore\n      }\n    }\n    return false;\n  });\n\n  // Calculate current active userId strictly for notification read tracking\n  const currentUserId =\n    currentRole === \'teacher\'\n      ? currentUserInfo.id || \'teacher_thao\'\n      : currentStudent\n      ? `student_${currentStudent.id}`\n      : \'student_guest\';\n\n  // Read notification IDs set for current user\n  const [readNotificationIds, setReadNotificationIds] = useState<Set<string>>(() => {\n    if (typeof window !== \'undefined\') {\n      try {\n        const cached = localStorage.getItem(`starkingdom_reads_${currentUserId}`);\n        if (cached) {\n          return new Set(JSON.parse(cached));\n        }\n      } catch (e) {}\n    }\n    return new Set<string>();\n  });\n\n  // Keep readNotificationIds in sync with currentUserId & appState\n  useEffect(() => {\n    if (appState && currentUserId) {\n      const serverReads = (appState.notificationReads || [])\n        .filter((r) => r.userId === currentUserId && r.isRead)\n        .map((r) => r.notificationId);\n\n      let localCached: string[] = [];\n      try {\n        const item = localStorage.getItem(`starkingdom_reads_${currentUserId}`);\n        if (item) localCached = JSON.parse(item);\n      } catch (e) {}\n\n      const merged = new Set([...serverReads, ...localCached]);\n      setReadNotificationIds(merged);\n      try {\n        localStorage.setItem(`starkingdom_reads_${currentUserId}`, JSON.stringify(Array.from(merged)));\n      } catch (e) {}\n    }\n  }, [appState?.notificationReads, currentUserId]);\n\n  const isNotificationRead = (notifId: string): boolean => {\n    return readNotificationIds.has(notifId);\n  };\n\n  const handleMarkNotificationAsRead = async (notificationId: string) => {\n    // 1. Optimistic update: mark as read immediately so badge & dot decrease instantly\n    setReadNotificationIds((prev) => {\n      const next = new Set(prev);\n      next.add(notificationId);\n      try {\n        localStorage.setItem(`starkingdom_reads_${currentUserId}`, JSON.stringify(Array.from(next)));\n      } catch (e) {}\n      return next;\n    });\n\n    // 2. Persist to server / database\n    try {\n      await api.markNotificationAsRead(notificationId, currentUserId, appState?.currentClassId);\n    } catch (err) {\n      console.warn(\'Network error marking notification as read; saved to local cache:\', err);\n    }\n  };\n\n  const handleOpenNotification = (notif: AppNotification) => {\n    setSelectedNotification(notif);\n    handleMarkNotificationAsRead(notif.id);\n  };\n\n  const addToast = (notification: AppNotification) => {\n    // Never show a toast for a notification that is already marked as read!\n    if (readNotificationIds.has(notification.id)) return;\n    setActiveToasts((prev) => [\n      ...prev.filter((t) => t.notification.id !== notification.id),\n      { id: `toast_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`, notification, createdAt: Date.now() },\n    ]);\n  };\n\n  const handleDismissToast = (toastId: string) => {\n    setActiveToasts((prev) => prev.filter((t) => t.id !== toastId));\n  };\n\n\n  // Load state on start\n  const fetchState = async () => {\n    try {\n      setLoading(true);\n      const data = await api.getState();\n      setAppState(data);\n      // Cache fresh state for offline use\n      offlineSync.cacheClassState(data);\n... (truncated)\n```\n\n--- /src/index.css ---\n```css\n@import \"tailwindcss\";\n\n@layer base {\n  *, ::before, ::after {\n    font-family: \'Nunito\', -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif !important;\n  }\n\n  html {\n    font-size: 15px;\n    -webkit-tap-highlight-color: transparent;\n  }\n\n  body {\n    font-family: \'Nunito\', sans-serif !important;\n    font-size: 15px;\n    line-height: 1.5;\n    color: #1E293B;\n    letter-spacing: -0.01em;\n  }\n\n  h1, h2, h3, h4, h5, h6, button, input, select, textarea {\n    font-family: \'Nunito\', sans-serif !important;\n  }\n}\n\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n    transform: translateY(6px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n\n@keyframes scaleIn {\n  from {\n    opacity: 0;\n    transform: scale(0.92);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}\n\n.animate-fade-in {\n  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;\n}\n\n.animate-scale-in {\n  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;\n}\n\n/* Custom scrollbars for friendly edtech feel */\n::-webkit-scrollbar {\n  width: 6px;\n  height: 6px;\n}\n\n::-webkit-scrollbar-track {\n  background: transparent;\n}\n\n::-webkit-scrollbar-thumb {\n  background: #CBD5E1;\n  border-radius: 9999px;\n}\n\n::-webkit-scrollbar-thumb:hover {\n  background: #94A3B8;\n}\n\n```\n\n--- /src/main.tsx ---\n```typescript\nimport {createRoot} from \'react-dom/client\';\nimport App from \'./App.tsx\';\nimport \'./index.css\';\n\ncreateRoot(document.getElementById(\'root\')!).render(<App />);\n\n```\n\n--- /tsconfig.json ---\n```json\n{\n  \"compilerOptions\": {\n    \"target\": \"ES2022\",\n    \"experimentalDecorators\": true,\n    \"useDefineForClassFields\": false,\n    \"module\": \"ESNext\",\n    \"types\": [\"vite/client\"],\n    \"lib\": [\n      \"ES2022\",\n      \"DOM\",\n      \"DOM.Iterable\"\n    ],\n    \"skipLibCheck\": true,\n    \"moduleResolution\": \"bundler\",\n    \"isolatedModules\": true,\n    \"moduleDetection\": \"force\",\n    \"allowJs\": true,\n    \"jsx\": \"react-jsx\",\n    \"paths\": {\n      \"@/*\": [\n        \"./*\"\n      ]\n    },\n    \"allowImportingTsExtensions\": true,\n    \"noEmit\": true\n  },\n  \"exclude\": [\"dist\"]\n}\n\n```\n\n--- /vite.config.ts ---\n```typescript\nimport tailwindcss from \'@tailwindcss/vite\';\nimport react from \'@vitejs/plugin-react\';\nimport path from \'path\';\nimport {defineConfig} from \'vite\';\n\nexport default defineConfig(() => {\n  return {\n    plugins: [react(), tailwindcss()],\n    resolve: {\n      alias: {\n        \'@\': path.resolve(process.cwd(), \'.\'),\n      },\n    },\n    server: {\n      // HMR is disabled in AI Studio via DISABLE_HMR env var.\n      // Do not modify\342\200\224file watching is disabled to prevent flickering during agent edits.\n      hmr: process.env.DISABLE_HMR !== \'true\',\n      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.\n      watch: process.env.DISABLE_HMR === \'true\' ? null : {},\n    },\n  };\n});\n\n```"
+    items {
+      text: "Here is the full initial file tree for the application:\n/.env.example\n/.gitignore\n/bun.lock\n/data/db.json\n/firebase-applet-config.json\n/firebase-blueprint.json\n/firestore.rules\n/index.html\n/metadata.json\n/package.json\n/public/assets/aistudio/demo2full_0ffc2909.png\n/public/assets/aistudio/demo_e72485c9.png\n/public/assets/kingdom/hero_banner.png\n/public/assets/kingdom/hero_banner_v2.png\n/public/assets/kingdom/mobile_mascot.png\n/public/assets/kingdom/mobile_mascot_v2.png\n/public/assets/kingdom/nav_halloffame.png\n/public/assets/kingdom/nav_home.png\n/public/assets/kingdom/nav_library.png\n/public/assets/kingdom/nav_news.png\n/public/assets/kingdom/nav_randompicker.png\n/public/assets/kingdom/nav_rewards.png\n/public/assets/kingdom/nav_students.png\n/public/assets/kingdom/nav_teams.png\n/public/assets/kingdom/school_logo.png\n/public/assets/kingdom/school_logo_v2.png\n/public/assets/kingdom/sidebar_logo.png\n/public/assets/kingdom/sidebar_mascot.png\n/public/assets/kingdom/sidebar_mascot_v2.png\n/public/assets/kingdom/student_anh.png\n/public/assets/kingdom/student_huy.png\n/public/assets/kingdom/student_minh.png\n/public/assets/kingdom/student_ngoc.png\n/public/assets/kingdom/student_qminh.png\n/public/assets/kingdom/teacher_avatar.png\n/public/manifest.json\n/public/sw.js\n/scripts/cropAssets.js\n/scripts/cropFullMockup.js\n/scripts/cropMore.js\n/server.js\n/server.ts\n/src/App.tsx\n/src/assets/images/regenerated_image_1793415781075.jpg\n/src/components/ClassNewsView.tsx\n/src/components/ClassQRCodeModal.tsx\n/src/components/ClassTeamsView.tsx\n/src/components/ClassroomToolsView.tsx\n/src/components/CreateClassModal.tsx\n/src/components/DeleteClassModal.tsx\n/src/components/EditTeamModal.tsx\n/src/components/HallOfFameView.tsx\n/src/components/Header.tsx\n/src/components/HeroBanner.tsx\n/src/components/HomeDashboard.tsx\n/src/components/ImageCropModal.tsx\n/src/components/LearningLibraryView.tsx\n/src/components/LoginPage.tsx\n/src/components/MenuIcon.tsx\n/src/components/NavigationCards.tsx\n/src/components/NotificationDetailModal.tsx\n/src/components/NotificationsDrawer.tsx\n/src/components/RandomPickerView.tsx\n/src/components/RewardsView.tsx\n/src/components/SchoolEmblem.tsx\n/src/components/SettingsBackupView.tsx\n/src/components/SettingsModal.tsx\n/src/components/Sidebar.tsx\n/src/components/StarPopover.tsx\n/src/components/StudentCard.tsx\n/src/components/StudentPortalView.tsx\n/src/components/StudentsView.tsx\n/src/components/ToastNotification.tsx\n/src/index.css\n/src/main.tsx\n/src/services/api.ts\n/src/services/firebase.ts\n/src/services/offlineSync.ts\n/src/types.ts\n/src/utils/audioManager.ts\n/src/utils/effects.ts\n/src/utils/timePeriodService.ts\n/tsconfig.json\n/vite.config.ts\n\nThe following dependencies are installed:\n@google/genai: ^2.4.0\n@tailwindcss/vite: ^4.3.3\n@vitejs/plugin-react: ^6.1.1\ncanvas-confetti: ^1.9.4\ndotenv: ^17.2.3\nexpress: ^4.21.2\nfirebase: ^13.1.0\nlucide-react: ^0.546.0\nmotion: ^12.23.24\nqrcode: ^1.5.4\nreact: ^19.0.1\nreact-dom: ^19.0.1\nsharp: ^0.35.5\nvite: ^8.3.0\nxlsx: ^0.18.5\n\nThe following devDependencies are installed:\n@types/canvas-confetti: ^1.9.0\n@types/express: ^4.17.21\n@types/node: ^22.14.0\n@types/qrcode: ^1.5.6\n@types/react: ^19.3.0\n@types/react-dom: ^19.3.0\nautoprefixer: ^10.4.21\nesbuild: ^0.25.0\ntailwindcss: ^4.3.3\ntsx: ^4.21.0\ntypescript: ^7.0.2\n\nKey file contents:\n\n--- /.env.example ---\n```\n# GEMINI_API_KEY: Required for Gemini AI API calls.\n# AI Studio automatically injects this at runtime from user secrets.\n# Users configure this via the Secrets panel in the AI Studio UI.\nGEMINI_API_KEY=\"MY_GEMINI_API_KEY\"\n\n# APP_URL: The URL where this applet is hosted.\n# AI Studio automatically injects this at runtime with the Cloud Run service URL.\n# Used for self-referential links, OAuth callbacks, and API endpoints.\nAPP_URL=\"MY_APP_URL\"\n\n```\n\n--- /firebase-applet-config.json ---\n```json\n{\n  \"projectId\": \"marklar-fiber-7vr20\",\n  \"appId\": \"1:352651636087:web:793fe5238e54c70b0d0572\",\n  \"apiKey\": \"AIzaSyDkPI8NxEWbQ4k2dhTUJNSwqGYr83o0pAc\",\n  \"authDomain\": \"marklar-fiber-7vr20.firebaseapp.com\",\n  \"firestoreDatabaseId\": \"ai-studio-remixverokmsthao-b02fd494-af21-403b-8767-76a17cf6b734\",\n  \"storageBucket\": \"marklar-fiber-7vr20.firebasestorage.app\",\n  \"messagingSenderId\": \"352651636087\",\n  \"measurementId\": \"\",\n  \"oAuthClientId\": \"352651636087-d5qkhqu4v6en4p6ikj4eq2inm3fq41f3.apps.googleusercontent.com\",\n  \"recaptchaSiteKey\": \"\"\n}\n```\n\n--- /index.html ---\n```html\n<!doctype html>\n<html lang=\"vi\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Ms. Thao\'s Star Kingdom - V\306\260\306\241ng qu\341\273\221c ng\303\264i sao</title>\n    <meta name=\"description\" content=\"H\341\273\207 th\341\273\221ng qu\341\272\243n l\303\275 l\341\273\233p h\341\273\215c ti\341\273\203u h\341\273\215c song ng\341\273\257 Anh - Vi\341\273\207t, qu\341\272\243n l\303\275 thi \304\221ua 4 t\341\273\225, c\341\273\231ng tr\341\273\253 sao tr\341\273\261c ti\341\272\277p tr\303\252n sticker h\341\273\215c sinh, \304\221i\341\273\203m danh, \304\221\341\273\225i th\306\260\341\273\237ng v\303\240 vinh danh.\" />\n    <meta property=\"og:title\" content=\"Ms. Thao\'s Star Kingdom - V\306\260\306\241ng qu\341\273\221c ng\303\264i sao\" />\n    <meta property=\"og:description\" content=\"H\341\273\207 th\341\273\221ng qu\341\272\243n l\303\275 l\341\273\233p h\341\273\215c ti\341\273\203u h\341\273\215c song ng\341\273\257 Anh - Vi\341\273\207t, qu\341\272\243n l\303\275 thi \304\221ua 4 t\341\273\225, c\341\273\231ng tr\341\273\253 sao tr\341\273\261c ti\341\272\277p tr\303\252n sticker h\341\273\215c sinh, \304\221i\341\273\203m danh, \304\221\341\273\225i th\306\260\341\273\237ng v\303\240 vinh danh.\" />\n    <meta property=\"og:type\" content=\"website\" />\n    <meta name=\"twitter:card\" content=\"summary_large_image\" />\n    <meta name=\"theme-color\" content=\"#47B5FF\" />\n    <link rel=\"manifest\" href=\"/manifest.json\" />\n    <link rel=\"icon\" type=\"image/png\" href=\"/assets/kingdom/school_logo_v2.png\" />\n    <link rel=\"apple-touch-icon\" href=\"/assets/kingdom/school_logo_v2.png\" />\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap\" rel=\"stylesheet\">\n  </head>\n  <body class=\"bg-[#F0F8FF] font-[\'Nunito\',sans-serif] text-[#263C72] antialiased select-none\">\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx\"></script>\n    <script>\n      if (\'serviceWorker\' in navigator && window.location.protocol.startsWith(\'http\')) {\n        window.addEventListener(\'load\', () => {\n          navigator.serviceWorker.register(\'/sw.js\').catch((err) => {\n            console.debug(\'ServiceWorker registration skipped:\', err);\n          });\n        });\n      }\n    </script>\n  </body>\n</html>\n\n\n```\n\n--- /metadata.json ---\n```json\n{\n  \"name\": \"Remix verokMs. Thao\\u0027s Star Kingdom - V\306\260\306\241ng qu\341\273\221c ng\303\264i saochecklai\",\n  \"description\": \"H\341\273\207 th\341\273\221ng qu\341\272\243n l\303\275 l\341\273\233p h\341\273\215c ti\341\273\203u h\341\273\215c song ng\341\273\257 Anh - Vi\341\273\207t\",\n  \"requestFramePermissions\": [],\n  \"majorCapabilities\": [\n    \"MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API\"\n  ]\n}\n```\n\n--- /src/App.tsx ---\n```typescript\nimport React, { useState, useEffect } from \'react\';\nimport { AppState, Role, Student, LibraryCategory, StarTransaction, ClassInfo, AppNotification } from \'./types\';\nimport { api } from \'./services/api\';\nimport { offlineSync } from \'./services/offlineSync\';\nimport { Header } from \'./components/Header\';\nimport { Sidebar, NavTab, navItems, settingsItem } from \'./components/Sidebar\';\nimport { HeroBanner } from \'./components/HeroBanner\';\nimport { NavigationCards } from \'./components/NavigationCards\';\nimport { HomeDashboard } from \'./components/HomeDashboard\';\nimport { StudentsView } from \'./components/StudentsView\';\nimport { ClassTeamsView } from \'./components/ClassTeamsView\';\nimport { RewardsView } from \'./components/RewardsView\';\nimport { HallOfFameView } from \'./components/HallOfFameView\';\nimport { ClassroomToolsView } from \'./components/ClassroomToolsView\';\nimport { ClassNewsView } from \'./components/ClassNewsView\';\nimport { LearningLibraryView } from \'./components/LearningLibraryView\';\nimport { SettingsBackupView } from \'./components/SettingsBackupView\';\nimport { CreateClassModal } from \'./components/CreateClassModal\';\nimport { StudentPortalView } from \'./components/StudentPortalView\';\nimport { LoginPage } from \'./components/LoginPage\';\nimport { ClassQRCodeModal } from \'./components/ClassQRCodeModal\';\nimport { MenuIcon } from \'./components/MenuIcon\';\nimport { DeleteClassModal } from \'./components/DeleteClassModal\';\nimport { NotificationsDrawer } from \'./components/NotificationsDrawer\';\nimport { NotificationDetailModal } from \'./components/NotificationDetailModal\';\nimport { ToastNotification, ActiveToast } from \'./components/ToastNotification\';\nimport { playStarSound, triggerGrandCelebration, stopCelebration } from \'./utils/effects\';\n\nimport {\n  Bell,\n  X,\n  Star,\n  Users,\n  Trophy,\n  Gift,\n  Dice5,\n  BookOpen,\n  Megaphone,\n  Home as HomeIcon,\n  Sparkles,\n  Briefcase,\n  Layers,\n} from \'lucide-react\';\n\nexport default function App() {\n  const [appState, setAppState] = useState<AppState | null>(null);\n  const [loading, setLoading] = useState(true);\n  const [error, setError] = useState<string | null>(null);\n\n  // Navigation & Role\n  const [currentTab, setCurrentTab] = useState<NavTab>(\'home\');\n  const [currentRole, setCurrentRole] = useState<Role>(\'teacher\');\n  const [currentStudent, setCurrentStudent] = useState<Student | null>(null);\n\n  // Sub-navigation presets\n  const [selectedToolTab, setSelectedToolTab] = useState<\'noise\' | \'timer\' | \'picker\'>(\'noise\');\n  const [selectedLibraryCategory, setSelectedLibraryCategory] = useState<LibraryCategory | \'all\'>(\'all\');\n\n  // Modals & Drawers\n  const [isCreateClassOpen, setIsCreateClassOpen] = useState(false);\n  const [headerClassToDelete, setHeaderClassToDelete] = useState<ClassInfo | null>(null);\n  const [isSettingsOpen, setIsSettingsOpen] = useState(false);\n  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);\n  const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);\n  const [activeToasts, setActiveToasts] = useState<ActiveToast[]>([]);\n  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);\n  const [isQrModalOpen, setIsQrModalOpen] = useState(false);\n\n  // Authentication & Current User State\n  const [currentUserInfo, setCurrentUserInfo] = useState<{ id: string; email?: string; name: string }>(() => {\n    if (typeof window !== \'undefined\') {\n      try {\n        const saved = localStorage.getItem(\'starkingdom_auth\');\n        if (saved) {\n          const parsed = JSON.parse(saved);\n          const uId = parsed.userId || parsed.email || (parsed.studentId ? `student_${parsed.studentId}` : \'teacher_thao\');\n          return {\n            id: uId,\n            email: parsed.email,\n            name: parsed.displayName || parsed.fullName || \'C\303\264 Th\341\272\243o\',\n          };\n        }\n      } catch (e) {\n        // ignore\n      }\n    }\n    return { id: \'teacher_thao\', email: \'tpt0208@gmail.com\', name: \'C\303\264 Th\341\272\243o\' };\n  });\n\n  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {\n    if (typeof window !== \'undefined\') {\n      const params = new URLSearchParams(window.location.search);\n      if (params.get(\'portal\') === \'student\' || params.get(\'code\') || params.get(\'student\')) {\n        return true;\n      }\n      try {\n        const saved = localStorage.getItem(\'starkingdom_auth\');\n        if (saved) {\n          const parsed = JSON.parse(saved);\n          return !!parsed.authenticated;\n        }\n      } catch (e) {\n        // ignore\n      }\n    }\n    return false;\n  });\n\n  // Calculate current active userId strictly for notification read tracking\n  const currentUserId =\n    currentRole === \'teacher\'\n      ? currentUserInfo.id || \'teacher_thao\'\n      : currentStudent\n      ? `student_${currentStudent.id}`\n      : \'student_guest\';\n\n  // Read notification IDs set for current user\n  const [readNotificationIds, setReadNotificationIds] = useState<Set<string>>(() => {\n    if (typeof window !== \'undefined\') {\n      try {\n        const cached = localStorage.getItem(`starkingdom_reads_${currentUserId}`);\n        if (cached) {\n          return new Set(JSON.parse(cached));\n        }\n      } catch (e) {}\n    }\n    return new Set<string>();\n  });\n\n  // Keep readNotificationIds in sync with currentUserId & appState\n  useEffect(() => {\n    if (appState && currentUserId) {\n      const serverReads = (appState.notificationReads || [])\n        .filter((r) => r.userId === currentUserId && r.isRead)\n        .map((r) => r.notificationId);\n\n      let localCached: string[] = [];\n      try {\n        const item = localStorage.getItem(`starkingdom_reads_${currentUserId}`);\n        if (item) localCached = JSON.parse(item);\n      } catch (e) {}\n\n      const merged = new Set([...serverReads, ...localCached]);\n      setReadNotificationIds(merged);\n      try {\n        localStorage.setItem(`starkingdom_reads_${currentUserId}`, JSON.stringify(Array.from(merged)));\n      } catch (e) {}\n    }\n  }, [appState?.notificationReads, currentUserId]);\n\n  const isNotificationRead = (notifId: string): boolean => {\n    return readNotificationIds.has(notifId);\n  };\n\n  const handleMarkNotificationAsRead = async (notificationId: string) => {\n    // 1. Optimistic update: mark as read immediately so badge & dot decrease instantly\n    setReadNotificationIds((prev) => {\n      const next = new Set(prev);\n      next.add(notificationId);\n      try {\n        localStorage.setItem(`starkingdom_reads_${currentUserId}`, JSON.stringify(Array.from(next)));\n      } catch (e) {}\n      return next;\n    });\n\n    // 2. Persist to server / database\n    try {\n      await api.markNotificationAsRead(notificationId, currentUserId, appState?.currentClassId);\n    } catch (err) {\n      console.warn(\'Network error marking notification as read; saved to local cache:\', err);\n    }\n  };\n\n  const handleOpenNotification = (notif: AppNotification) => {\n    setSelectedNotification(notif);\n    handleMarkNotificationAsRead(notif.id);\n  };\n\n  const addToast = (notification: AppNotification) => {\n    // Never show a toast for a notification that is already marked as read!\n    if (readNotificationIds.has(notification.id)) return;\n    setActiveToasts((prev) => [\n      ...prev.filter((t) => t.notification.id !== notification.id),\n      { id: `toast_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`, notification, createdAt: Date.now() },\n    ]);\n  };\n\n  const handleDismissToast = (toastId: string) => {\n    setActiveToasts((prev) => prev.filter((t) => t.id !== toastId));\n  };\n\n\n  // Load state on start\n  const fetchState = async () => {\n    try {\n      setLoading(true);\n      const data = await api.getState();\n      setAppState(data);\n      // Cache fresh state for offline use\n      offlineSync.cacheClassState(data);\n... (truncated)\n```\n\n--- /src/index.css ---\n```css\n@import \"tailwindcss\";\n\n@layer base {\n  *, ::before, ::after {\n    font-family: \'Nunito\', -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif !important;\n  }\n\n  html {\n    font-size: 15px;\n    -webkit-tap-highlight-color: transparent;\n  }\n\n  body {\n    font-family: \'Nunito\', sans-serif !important;\n    font-size: 15px;\n    line-height: 1.5;\n    color: #1E293B;\n    letter-spacing: -0.01em;\n  }\n\n  h1, h2, h3, h4, h5, h6, button, input, select, textarea {\n    font-family: \'Nunito\', sans-serif !important;\n  }\n}\n\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n    transform: translateY(6px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n\n@keyframes scaleIn {\n  from {\n    opacity: 0;\n    transform: scale(0.92);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}\n\n.animate-fade-in {\n  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;\n}\n\n.animate-scale-in {\n  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;\n}\n\n/* Custom scrollbars for friendly edtech feel */\n::-webkit-scrollbar {\n  width: 6px;\n  height: 6px;\n}\n\n::-webkit-scrollbar-track {\n  background: transparent;\n}\n\n::-webkit-scrollbar-thumb {\n  background: #CBD5E1;\n  border-radius: 9999px;\n}\n\n::-webkit-scrollbar-thumb:hover {\n  background: #94A3B8;\n}\n\n```\n\n--- /src/main.tsx ---\n```typescript\nimport {createRoot} from \'react-dom/client\';\nimport App from \'./App.tsx\';\nimport \'./index.css\';\n\ncreateRoot(document.getElementById(\'root\')!).render(<App />);\n\n```\n\n--- /tsconfig.json ---\n```json\n{\n  \"compilerOptions\": {\n    \"target\": \"ES2022\",\n    \"experimentalDecorators\": true,\n    \"useDefineForClassFields\": false,\n    \"module\": \"ESNext\",\n    \"types\": [\"vite/client\"],\n    \"lib\": [\n      \"ES2022\",\n      \"DOM\",\n      \"DOM.Iterable\"\n    ],\n    \"skipLibCheck\": true,\n    \"moduleResolution\": \"bundler\",\n    \"isolatedModules\": true,\n    \"moduleDetection\": \"force\",\n    \"allowJs\": true,\n    \"jsx\": \"react-jsx\",\n    \"paths\": {\n      \"@/*\": [\n        \"./*\"\n      ]\n    },\n    \"allowImportingTsExtensions\": true,\n    \"noEmit\": true\n  },\n  \"exclude\": [\"dist\"]\n}\n\n```\n\n--- /vite.config.ts ---\n```typescript\nimport tailwindcss from \'@tailwindcss/vite\';\nimport react from \'@vitejs/plugin-react\';\nimport path from \'path\';\nimport {defineConfig} from \'vite\';\n\nexport default defineConfig(() => {\n  return {\n    plugins: [react(), tailwindcss()],\n    resolve: {\n      alias: {\n        \'@\': path.resolve(process.cwd(), \'.\'),\n      },\n    },\n    server: {\n      // HMR is disabled in AI Studio via DISABLE_HMR env var.\n      // Do not modify\342\200\224file watching is disabled to prevent flickering during agent edits.\n      hmr: process.env.DISABLE_HMR !== \'true\',\n      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.\n      watch: process.env.DISABLE_HMR === \'true\' ? null : {},\n    },\n  };\n});\n\n```"
+    }
+  }
+}
+steps {
+  type: CORTEX_STEP_TYPE_USER_INPUT
+  status: CORTEX_STEP_STATUS_DONE
+  metadata {
+    created_at {
+      seconds: 1793415967
+      nanos: 687183000
+    }
+    completed_at {
+      seconds: 1793415967
+      nanos: 687183000
+    }
+  }
+  user_input {
+    items {
+      text: "Remixed \"verokMs. Thao\'s Star Kingdom - V\306\260\306\241ng qu\341\273\221c ng\303\264i saochecklai\""
+    }
+  }
+}
+steps {
+  type: CORTEX_STEP_TYPE_USER_INPUT
+  status: CORTEX_STEP_STATUS_DONE
+  metadata {
+    created_at {
+      seconds: 1793416682
+      nanos: 930886000
+    }
+    source: CORTEX_STEP_SOURCE_USER_EXPLICIT
+    completed_at {
+      seconds: 1793416682
+      nanos: 930887000
+    }
+  }
+  user_input {
+    items {
+      text: "I made some changes."
+    }
+  }
+}
+steps {
+  type: CORTEX_STEP_TYPE_FILE_CHANGE
+  status: CORTEX_STEP_STATUS_DONE
+  metadata {
+    created_at {
+      seconds: 1793416681
+      nanos: 856315000
+    }
+    source: CORTEX_STEP_SOURCE_USER_EXPLICIT
+    completed_at {
+      seconds: 1793416681
+      nanos: 856315000
+    }
+  }
+  file_change {
+    absolute_path_uri: "file://src/assets/images/regenerated_image_1793416659674.jpg"
+    file_change_type: FILE_CHANGE_TYPE_CREATE
+    diff {
+      unified_diff {
+      }
+    }
+  }
+}
+steps {
+  type: CORTEX_STEP_TYPE_USER_INPUT
+  status: CORTEX_STEP_STATUS_DONE
+  metadata {
+    created_at {
+      seconds: 1793416689
+      nanos: 833425013
+    }
+    source: CORTEX_STEP_SOURCE_USER_EXPLICIT
+    source_trajectory_step_info {
+      trajectory_id: "b02fd494-af21-403b-8767-76a17cf6b734"
+      step_index: 4
+      cascade_id: "b02fd494-af21-403b-8767-76a17cf6b734"
+    }
+    model_api_content_id: "b1d215cbd73a44dca0ac730704a42320"
+  }
+  user_input {
+    user_response: "I updated images. Please update any code references to use the new version if needed.\n[AIS_METADATA_SECTION_START]\nuse the image at src/assets/images/regenerated_image_1793416659674.jpg: for selector div#root:nth-of-type(1) > div:nth-of-type(1) > header:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > img:nth-of-type(1)\nNote: Try not to move binary files. Avoid interpreting these files as text to avoid file corruption.\n[AIS_METADATA_SECTION_END]"
+    items {
+      text: "I updated images. Please update any code references to use the new version if needed.\n[AIS_METADATA_SECTION_START]\nuse the image at src/assets/images/regenerated_image_1793416659674.jpg: for selector div#root:nth-of-type(1) > div:nth-of-type(1) > header:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > img:nth-of-type(1)\nNote: Try not to move binary files. Avoid interpreting these files as text to avoid file corruption.\n[AIS_METADATA_SECTION_END]"
+    }
+  }
+}
+steps {
+  type: CORTEX_STEP_TYPE_PLANNER_RESPONSE
+  status: CORTEX_STEP_STATUS_DONE
+  metadata {
+    created_at {
+      seconds: 1793416689
+      nanos: 833902633
+    }
+    source: CORTEX_STEP_SOURCE_MODEL
+    viewable_at {
+      seconds: 1793416692
+      nanos: 581381419
+    }
+    finished_generating_at {
+      seconds: 1793416694
+      nanos: 154819397
+    }
+    completed_at {
+      seconds: 1793416694
+      nanos: 154819397
+    }
+    model_usage {
+      input_tokens: 25186
+      output_tokens: 392
+      message_id: "8l3laqzaBO-lqtsPvM3AeA"
+      thinking_output_tokens: 342
+      response_output_tokens: 50
+      response_id: "8l3laqzaBO-lqtsPvM3AeA"
+      prompt_tokens_details {
+        modality: TEXT
+        token_count: 25186
+      }
+    }
+    generator_model: MODEL_GOOGLE_GEMINI_INTERNAL_BYOM
+    execution_id: "b02fd494-af21-403b-8767-76a17cf6b734"
+    requested_model {
+      model: MODEL_GOOGLE_GEMINI_INTERNAL_BYOM
+    }
+    source_trajectory_step_info {
+      trajectory_id: "b02fd494-af21-403b-8767-76a17cf6b734"
+      step_index: 5
+      cascade_id: "b02fd494-af21-403b-8767-76a17cf6b734"
+    }
+    step_generation_version: 1
+    model_info {
+      model_name: "gemini-3.8-flash"
+      thinking_level: 2
+    }
+    started_at {
+      seconds: 1793416694
+      nanos: 154819397
+    }
+    model_api_content_id: "8l3laqzaBO-lqtsPvM3AeA"
+  }
+  planner_response {
+    thinking: "**Reviewing Image Updates**\n\nI\'ve just finished reviewing the image updates and am now focused on ensuring all code references are updated to use the new image version. I\'m carefully going through the codebase, meticulously replacing instances of the old image with the new one. I want to make sure the transition is seamless.\n\n\n"
+    tool_calls {
+      id: "call_31851"
+      name: "view_file"
+      arguments_json: "{\"AbsolutePath\":\"/skills/system_skills/focus_mode/SKILL.md\", \"toolAction\":\"Viewing focus mode skill\", \"toolSummary\":\"Check focus mode instructions\"}"
+      thinking_signature: "\022\245\n\n\242\n\001i\024}\023\r\236\000\345Ae:\326\032\035\276F\270\ag\304\022\331\260 L\242\374\200\002\204Q\235\3265\362\272\001\027F\004\266{\031\243&V\303\201`\353\005\253_P\177\301oR\351\241\3144\330\223!\365\025Y~\200\000\222xH\242\307\'\317F\306\366\245>6\277\n\232\025\2523\326\027\222\332O\240\230\216z\226\242r\177\3765P\252%\361\026m\277\330J\b\237\324\003\323@=KOhq\347:Y\333\300\353\005\2240\311hg\264k\301s\227Mz\227\026\215y\001\344\373\032\310\022\n\246h\341\202To\337k\226x\205\312-7\261.\\\317\251\327\327\356W\221\005\307\366O\346r\337\316\000/Q\225\354J\037\345E\371\346\2541\277\305\376\"\\V \231\3166\362\372\325\222\372\032\f\374\277\004\345\233\371\351L\314\222\005\021\274\034/\262W\235>\177\275\200\022\266\246\026\224<6 \357\352\017\307\216\347\203\347\277\341K\201T#\023@\327\240\364\262\375\307\271\020\357\nj\342\333\234M\235W\332.\"W\257k\223\321\000\\R\214\177\266Ul\001r\v\362MAS\217_Co\265r\036a\366\301f\230\220\301%#8\262H\227`\330\247\372^\243~{\324\t\al\207|\311\363s%\rZ7\311\314\a:\302\326a\n\335\177\0054\200\313\241\204\227!+~\212\376G~$\004\265,E\351\246l2$\2770\310t\230\226K\216\036\323k=\204D\231\303\323$\315\322\331\000\326\233\310H\037\'\327\206\347\244;Ne\036GM\nx\371\205\250U\226\227\344\213Z\244M\372#\305\235b~\2434\\x\245\227\324\357j\376O\225\345++\320\0369D\005Z\305\200\377\316D\026&\312\023\371\322\332\266e\214\313\355w%\336\3311\26372\243\215g\004\327\211\236\000\265\301\343LP[\000\330\n$\276\370\016\243F\032a\035\f\340\352b\356\237\347\346\215\005a\025\005\031\177\357\252\267\325\347\034\2222\220\003|\n\a\327\2702\005#?>\n\360\\F\222\246r\251y|\246\314\331\301FZ\033\000\354\2539\201\203\210<\215e\254.,\016+\020^\257@\356\217\237\347\311}x\211\2350\030X\325\266\357\204\344\327\021\221XG\316k\256\316?\327\372r\367K\235-\'n\345\277\365\331\316\232V\n\230lJGuh\262\277khn\022\326J)\275\215\305FP\275@*\345\326\353\223\001\032WE<>\275z\\\230\n\0310\222\331\033AW\2759-\370q\2150\363>q\217n\361\304z\370\016\370Q\026G\262\203\267\237\206\300\233\347\337\342\245\232\377?\340\263d\201\0065\025\230\234(\345\261\245\256\225\035\a\207F\232\240\213\222\316I\367\267\220\315\236\\\266\354\221\246\360\201\351vt\r\205\022\357\277\033\247,\037I\354\307#\260\305]\275\305n\245\347\025%%\233\243\301<\037\307n\235\006\2044_\375\f\332\221\352\356\270\306\244\b[\326\270\257^dUE\213Q\006\372\320\a\364m\032V\300i\320[\247\240\377x\330\231\217tP\214z\300i1\203\321\273>\256}\334m\321\017,c\343f\022~#Z1\225KCm1o\313\v\233\326\267Q#T\254\256\270\374\3164\355n\241\322H\232\227\316*\201\240\300\367\322\243\236Fqu\366\021\262%OI\305\250\271\311q\341w\213\212\rG\331\263\336\\\033<o\217\300\371sM\335\223\t\254b&\347\226\305hU\302\366\2072?8\332iU\027E\377K\266\335\250\234\207\004\254\213\016\021c\020\373h\300\247\246\234p\235\355\227\024\343u\204\326\271\306\260M\301\207\316\376\332\343s\212\241\326\324\225\203m\375 \242\312\233\036a\2514\243i\310[\"\342i\201\017\237\236\t%M[t8\345\017\034\031\227\370C\025I\264\257g&$6\b\315\020\320HS\225\352\374\303\004\223\017\030\222\300\361L]\371\024\274\253\305\235\355chn\336\306\347cw~\370VZ\236\360\271\"\005Vj\366\325qE(r\0372x\370\024\'\330\363>V\035\223\032+Vu\350F\210\215\017d\267\200\375G&f\234\311i}\223\270\312!H[\a`@_@\253?\212W\314G\335\323\235\334B\241\t*\005\260\254\035\254I\241\367\'z:[\255\343J\202k\022X\224\341wv\204\247;\352\3256j\020\237vM\301Y\255~K\264f}e\267\230\254_\005\324\364\337\230\245\367\006f\211\270\242$mx\255\212\205NL\253s\371Y\207\a\246\224\337\353\304Y\315\360\305(\223\233\222\351\345\374u\242p\373j\375\311\027 \027\314Y\b\033\334\272\304\207\331\a\311\340\024}\224\263\352;\314\335\274\364\227\341_\304\240\314\373\225\235QC\023b[\000\365\260R_\005Ll\366eB\027\317T\370#\200\031\205\344hh\241\230\353\264\324\207\325\242\257]>\213\020\340\302\373.\'\3623\304\341\t\345\276\230\300"
+      original_name: "view_file"
+    }
+    thinking_duration {
+      seconds: 1
+      nanos: 573256718
+    }
+    stop_reason: STOP_REASON_STOP_PATTERN
+    provider_assigned_message_id: "8l3laqzaBO-lqtsPvM3AeA"
+  }
+}
+steps {
+  type: CORTEX_STEP_TYPE_VIEW_FILE
+  status: CORTEX_STEP_STATUS_DONE
+  metadata {
+    created_at {
+      seconds: 1793416694
+      nanos: 116720509
+    }
+    source: CORTEX_STEP_SOURCE_MODEL
+    tool_call {
+      id: "call_31851"
+      name: "view_file"
+      thinking_signature: "\022\245\n\n\242\n\001i\024}\023\r\236\000\345Ae:\326\032\035\276F\270\ag\304\022\331\260 L\242\374\200\002\204Q\235\3265\362\272\001\027F\004\266{\031\243&V\303\201`\353\005\253_P\177\301oR\351\241\3144\330\223!\365\025Y~\200\000\222xH\242\307\'\317F\306\366\245>6\277\n\232\025\2523\326\027\222\332O\240\230\216z\226\242r\177\3765P\252%\361\026m\277\330J\b\237\324\003\323@=KOhq\347:Y\333\300\353\005\2240\311hg\264k\301s\227Mz\227\026\215y\001\344\373\032\310\022\n\246h\341\202To\337k\226x\205\312-7\261.\\\317\251\327\327\356W\221\005\307\366O\346r\337\316\000/Q\225\354J\037\345E\371\346\2541\277\305\376\"\\V \231\3166\362\372\325\222\372\032\f\374\277\004\345\233\371\351L\314\222\005\021\274\034/\262W\235>\177\275\200\022\266\246\026\224<6 \357\352\017\307\216\347\203\347\277\341K\201T#\023@\327\240\364\262\375\307\271\020\357\nj\342\333\234M\235W\332.\"W\257k\223\321\000\\R\214\177\266Ul\001r\v\362MAS\217_Co\265r\036a\366\301f\230\220\301%#8\262H\227`\330\247\372^\243~{\324\t\al\207|\311\363s%\rZ7\311\314\a:\302\326a\n\335\177\0054\200\313\241\204\227!+~\212\376G~$\004\265,E\351\246l2$\2770\310t\230\226K\216\036\323k=\204D\231\303\323$\315\322\331\000\326\233\310H\037\'\327\206\347\244;Ne\036GM\nx\371\205\250U\226\227\344\213Z\244M\372#\305\235b~\2434\\x\245\227\324\357j\376O\225\345++\320\0369D\005Z\305\200\377\316D\026&\312\023\371\322\332\266e\214\313\355w%\336\3311\26372\243\215g\004\327\211\236\000\265\301\343LP[\000\330\n$\276\370\016\243F\032a\035\f\340\352b\356\237\347\346\215\005a\025\005\031\177\357\252\267\325\347\034\2222\220\003|\n\a\327\2702\005#?>\n\360\\F\222\246r\251y|\246\314\331\301FZ\033\000\354\2539\201\203\210<\215e\254.,\016+\020^\257@\356\217\237\347\311}x\211\2350\030X\325\266\357\204\344\327\021\221XG\316k\256\316?\327\372r\367K\235-\'n\345\277\365\331\316\232V\n\230lJGuh\262\277khn\022\326J)\275\215\305FP\275@*\345\326\353\223\001\032WE<>\275z\\\230\n\0310\222\331\033AW\2759-\370q\2150\363>q\217n\361\304z\370\016\370Q\026G\262\203\267\237\206\300\233\347\337\342\245\232\377?\340\263d\201\0065\025\230\234(\345\261\245\256\225\035\a\207F\232\240\213\222\316I\367\267\220\315\236\\\266\354\221\246\360\201\351vt\r\205\022\357\277\033\247,\037I\354\307#\260\305]\275\305n\245\347\025%%\233\243\301<\037\307n\235\006\2044_\375\f\332\221\352\356\270\306\244\b[\326\270\257^dUE\213Q\006\372\320\a\364m\032V\300i\320[\247\240\377x\330\231\217tP\214z\300i1\203\321\273>\256}\334m\321\017,c\343f\022~#Z1\225KCm1o\313\v\233\326\267Q#T\254\256\270\374\3164\355n\241\322H\232\227\316*\201\240\300\367\322\243\236Fqu\366\021\262%OI\305\250\271\311q\341w\213\212\rG\331\263\336\\\033<o\217\300\371sM\335\223\t\254b&\347\226\305hU\302\366\2072?8\332iU\027E\377K\266\335\250\234\207\004\254\213\016\021c\020\373h\300\247\246\234p\235\355\227\024\343u\204\326\271\306\260M\301\207\316\376\332\343s\212\241\326\324\225\203m\375 \242\312\233\036a\2514\243i\310[\"\342i\201\017\237\236\t%M[t8\345\017\034\031\227\370C\025I\264\257g&$6\b\315\020\320HS\225\352\374\303\004\223\017\030\222\300\361L]\371\024\274\253\305\235\355chn\336\306\347cw~\370VZ\236\360\271\"\005Vj\366\325qE(r\0372x\370\024\'\330\363>V\035\223\032+Vu\350F\210\215\017d\267\200\375G&f\234\311i}\223\270\312!H[\a`@_@\253?\212W\314G\335\323\235\334B\241\t*\005\260\254\035\254I\241\367\'z:[\255\343J\202k\022X\224\341wv\204\247;\352\3256j\020\237vM\301Y\255~K\264f}e\267\230\254_\005\324\364\337\230\245\367\006f\211\270\242$mx\255\212\205NL\253s\371Y\207\a\246\224\337\353\304Y\315\360\305(\223\233\222\351\345\374u\242p\373j\375\311\027 \027\314Y\b\033\334\272\304\207\331\a\311\340\024}\224\263\352;\314\335\274\364\227\341_\304\240\314\373\225\235QC\023b[\000\365\260R_\005Ll\366eB\027\317T\370#\200\031\205\344hh\241\230\353\264\324\207\325\242\257]>\213\020\340\302\373.\'\3623\304\341\t\345\276\230\300"
+      original_name: "view_file"
+    }
+    arguments_order: "AbsolutePath"
+    arguments_order: "toolAction"
+    arguments_order: "toolSummary"
+    viewable_at {
+      seconds: 1793416694
+      nanos: 154709267
+    }
+    finished_generating_at {
+      seconds: 1793416694
+      nanos: 154708397
+    }
+    completed_at {
+      seconds: 1793416694
+      nanos: 155271577
+    }
+    generator_model: MODEL_GOOGLE_GEMINI_INTERNAL_BYOM
+    execution_id: "b02fd494-af21-403b-8767-76a17cf6b734"
+    requested_model {
+      model: MODEL_GOOGLE_GEMINI_INTERNAL_BYOM
+    }
+    source_trajectory_step_info {
+      trajectory_id: "b02fd494-af21-403b-8767-76a17cf6b734"
+      step_index: 6
+      cascade_id: "b02fd494-af21-403b-8767-76a17cf6b734"
+    }
+    step_generation_version: 1
+    last_completed_chunk_at {
+      seconds: 1793416694
+      nanos: 154704517
+    }
+    tool_call_output_tokens: 37
+    model_info {
+      model_name: "gemini-3.8-flash"
+      thinking_level: 2
+    }
+    tool_summary: "Check focus mode instructions"
+    tool_action: "Viewing focus mode skill"
+    started_at {
+      seconds: 1793416694
+      nanos: 154708397
+    }
+    model_api_content_id: "816f55212ff94b59984683bf1f8efc81"
+  }
+  view_file {
+    absolute_path_uri: "file:///skills/system_skills/focus_mode/SKILL.md"
+    end_line: 57
+    content: "---\nname: focus-mode\ndescription: Instructions for responding to UI element selection (CSS selectors).\n---\n\n### Focus Mode: Responding to Element Selection\n\nThe following \"Focus Mode\" instructions apply only if the current request\ncontains a metadata block with CSS selector information. The metadata block\nappears at the end of the user\'s prompt in this format:\n\n```\n[AIS_METADATA_SECTION_START]\nCSS selector: <selector>\n[AIS_METADATA_SECTION_END]\n```\n\nOr:\n\n```\n[AIS_METADATA_SECTION_START]\nCSS selector 1: <selector>\nCSS 1: { <css properties> }\nCSS selector 2: <selector>\nCSS 2: { <css properties> }\n[AIS_METADATA_SECTION_END]\n```\n\nIf no metadata block is present, this section can be ignored.\n\nWhen a selector *is* provided, it signifies the user\'s current focus on a\nspecific UI element. Your changes should be primarily focused on this element.\nEven if there are other elements that look similar, only the element matching\nthat CSS selector should be changed. Ignore any other selectors mentioned in the\nconversation history, as they are from previous selections and no longer active.\nYour code modifications should be highly targeted to modifying that element.\n\n-   **Handling CSS Blocks:** If `CSS N:` blocks are provided in the metadata,\n    you MUST apply those CSS rules FIRST, before processing any text prompt.\n    Apply ONLY those CSS rules to their matching `CSS selector N:` elements.\n    After applying the CSS, proceed to handle the user\'s text prompt (if any).\n    When applying CSS, you MUST NOT modify any files or elements beyond what is\n    strictly necessary to apply the provided CSS rules. In particular, you MUST\n    NOT introduce accessibility updates, theme updates, or fix other styling\n    issues not covered by the provided CSS, even if you notice them as problems.\n-   **Analyze Context:** Use the provided CSS selector to locate the element\n    within the code files. Examine the element\'s markup, content, and any\n    associated styles to understand its purpose and context. This will give you\n    a better understanding of what changes are permissible and relevant for that\n    element.\n-   **Keep Changes Focused:** Changes should prioritize the selected element and\n    its children. However, you can make changes to a parent or related component\n    if it\'s a logical extension of the user\'s action (e.g., modifying a table\'s\n    properties when a row is selected). When making style changes, apply them\n    directly to the element to avoid unintended global changes.\n-   **Maintain Overall Relevance:** Ensure that even element-specific changes\n    are aligned with the application\'s purpose.\n"
+    num_lines: 58
+    num_bytes: 2632
+    is_skill_file: true
+    skill_metadata {
+      name: "focus-mode"
+      description: "Instructions for responding to UI element selection (CSS selectors)."
+    }
+    line_range_bytes: 2632
+  }
+}
+steps {
+  type: CORTEX_STEP_TYPE_PLANNER_RESPONSE
+  status: CORTEX_STEP_STATUS_CANCELED
+  metadata {
+    created_at {
+      seconds: 1793416698
+      nanos: 397341508
+    }
+    source: CORTEX_STEP_SOURCE_MODEL
+    viewable_at {
+      seconds: 1793416701
+      nanos: 55761327
+    }
+    completed_at {
+      seconds: 1793416705
+      nanos: 165289000
+    }
+    generator_model: MODEL_GOOGLE_GEMINI_INTERNAL_BYOM
+    execution_id: "b02fd494-af21-403b-8767-76a17cf6b734"
+    requested_model {
+      model: MODEL_GOOGLE_GEMINI_INTERNAL_BYOM
+    }
+    source_trajectory_step_info {
+      trajectory_id: "b02fd494-af21-403b-8767-76a17cf6b734"
+      step_index: 7
+      metadata_index: 1
+      cascade_id: "b02fd494-af21-403b-8767-76a17cf6b734"
+    }
+    step_generation_version: 1
+    model_info {
+      model_name: "gemini-3.8-flash"
+      thinking_level: 2
+    }
+    model_api_content_id: "-l3laqb7HPe7qtsPhPXUaQ"
+  }
+  planner_response {
+    thinking: "**Pinpointing the Image**\n\nI\'ve isolated the specific image element within the document. The selector pinpoints the exact `img` tag I need. My next step will be to confirm its `src` attribute matches `src/assets/images/regener`.\n\n\n"
+    stop_reason: STOP_REASON_STOP_PATTERN
+    provider_assigned_message_id: "-l3laqb7HPe7qtsPhPXUaQ"
+  }
+}
+generator_metadata {
+  chat_model {
+    model: MODEL_GOOGLE_GEMINI_INTERNAL_BYOM
+    usage {
+      input_tokens: 25186
+      output_tokens: 392
+      message_id: "8l3laqzaBO-lqtsPvM3AeA"
+      thinking_output_tokens: 342
+      response_output_tokens: 50
+      response_id: "8l3laqzaBO-lqtsPvM3AeA"
+      prompt_tokens_details {
+        modality: TEXT
+        token_count: 25186
+      }
+    }
+    tool_choice {
+      option_name: "auto"
+    }
+    tools {
+      name: "write_to_file"
+    }
+    tools {
+      name: "replace_file_content"
+    }
+    tools {
+      name: "multi_replace_file_content"
+    }
+    tools {
+      name: "delete_file"
+    }
+    tools {
+      name: "list_dir"
+    }
+    tools {
+      name: "delete_dir"
+    }
+    tools {
+      name: "move"
+    }
+    tools {
+      name: "view_file"
+    }
+    tools {
+      name: "compile_applet"
+    }
+    tools {
+      name: "install_applet_dependencies"
+    }
+    tools {
+      name: "install_applet_package"
+    }
+    tools {
+      name: "restart_dev_server"
+    }
+    tools {
+      name: "search_web"
+    }
+    tools {
+      name: "generate_image"
+    }
+    tools {
+      name: "lint_applet"
+    }
+    tools {
+      name: "set_up_firebase"
+    }
+    tools {
+      name: "deploy_firebase"
+    }
+    tools {
+      name: "rpc_action"
+    }
+    tools {
+      name: "set_up_oauth"
+    }
+    tools {
+      name: "remove_oauth"
+    }
+    tools {
+      name: "show_aistudio_ui"
+    }
+    tools {
+      name: "ask_question"
+    }
+    tools {
+      name: "run_command"
+    }
+    tools {
+      name: "manage_task"
+    }
+    tools {
+      name: "schedule"
+    }
+    chat_start_metadata {
+      checkpoint_index: -1
+      created_at {
+        seconds: 1793416689
+        nanos: 833689403
+      }
+      time_since_last_invocation {
+      }
+      context_window_metadata {
+        estimated_tokens_used: 6405
+        max_context_tokens: 256000
+      }
+    }
+    time_to_first_token {
+      seconds: 2
+      nanos: 747473416
+    }
+    streaming_duration {
+      seconds: 1
+      nanos: 573443088
+    }
+    completion_config {
+      max_tokens: 65536
+    }
+    retry_infos {
+      usage {
+        input_tokens: 25186
+        output_tokens: 392
+        message_id: "8l3laqzaBO-lqtsPvM3AeA"
+        thinking_output_tokens: 342
+        response_output_tokens: 50
+        response_id: "8l3laqzaBO-lqtsPvM3AeA"
+        prompt_tokens_details {
+          modality: TEXT
+          token_count: 25186
+        }
+      }
+    }
+    response_model: "gemini-3.8-flash"
+    custom_metadata {
+      key: "cascade_id"
+      value: "b02fd494-af21-403b-8767-76a17cf6b734"
+    }
+    custom_metadata {
+      key: "last_step_index"
+      value: "4"
+    }
+    custom_metadata {
+      key: "model_enum"
+      value: "MODEL_GOOGLE_GEMINI_INTERNAL_BYOM"
+    }
+    custom_metadata {
+      key: "request_id"
+      value: "b02fd494-af21-403b-8767-76a17cf6b734-0"
+    }
+    custom_metadata {
+      key: "trajectory_id"
+      value: "b02fd494-af21-403b-8767-76a17cf6b734"
+    }
+    custom_metadata {
+      key: "used_claude"
+      value: "false"
+    }
+    custom_metadata {
+      key: "used_claude_conservative"
+      value: "false"
+    }
+    custom_metadata {
+      key: "used_non_gemini_model"
+      value: "true"
+    }
+  }
+  step_indices: 5
+  step_indices: 6
+  planner_config {
+    plan_model: MODEL_GOOGLE_GEMINI_INTERNAL_BYOM
+    max_output_tokens: 65536
+    no_tool_explanation: true
+    ephemeral_messages_config {
+      enabled: false
+      persistence_level: EPHEMERAL_MESSAGE_PERSISTENCE_LEVEL_LATEST_ONLY
+      browser_ephemeral_options: BROWSER_EPHEMERAL_OPTION_SCREENSHOT
+      browser_ephemeral_options: BROWSER_EPHEMERAL_OPTION_DOM
+      use_allowlist: true
+    }
+    google {
+      planner_mode: CONVERSATIONAL_PLANNER_MODE_DEFAULT
+      eval_mode: false
+      agentic_mode: true
+    }
+    custom_model_info_override {
+      model_name: "gemini-3.8-flash"
+      thinking_level: 2
+    }
+    retry_config {
+      model_output_retry {
+        max_retries: 4
+        forbid_tool_use: true
+        retry_only_on_invalid_args: false
+      }
+      api_retry {
+        max_retries: 8
+        initial_sleep_duration_ms: 4000
+        exponential_multiplier: 2.0
+        include_error_feedback: false
+        range: 0.4
+      }
+    }
+    knowledge_config {
+      enabled: false
+      model: MODEL_PLACEHOLDER_M18
+      max_context_tokens: 200000
+      max_invocations: 20
+      min_turns_between_knowledge_generation: 10000
+      max_knowledge_items: 20
+      max_artifacts_per_ki: 20
+      max_title_length: 100
+      max_summary_length: 1000
+    }
+    no_tool_summary: false
+    no_wait_for_previous_tools: false
+    disable_loop_detection: true
+  }
+  execution_id: "b02fd494-af21-403b-8767-76a17cf6b734"
+}

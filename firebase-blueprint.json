@@ -1,0 +1,146 @@
+{
+  "entities": {
+    "School": {
+      "title": "School",
+      "description": "School information entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "nameEn": { "type": "string" },
+        "logoUrl": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    },
+    "Class": {
+      "title": "Class",
+      "description": "Class entity representing Class 2A5",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "nameEn": { "type": "string" },
+        "schoolYear": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "teacherTitleEn": { "type": "string" },
+        "targetSize": { "type": "number" },
+        "sloganVi": { "type": "string" },
+        "sloganEn": { "type": "string" }
+      },
+      "required": ["id", "name", "schoolYear"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Student in the classroom",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "classId": { "type": "string" },
+        "studentCode": { "type": "string" },
+        "fullName": { "type": "string" },
+        "gender": { "type": "string", "enum": ["male", "female"] },
+        "teamId": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "totalEarnedStars": { "type": "number" },
+        "spendableStars": { "type": "number" },
+        "weeklyStars": { "type": "number" },
+        "monthlyStars": { "type": "number" },
+        "level": { "type": "number" }
+      },
+      "required": ["id", "fullName", "classId"]
+    },
+    "Team": {
+      "title": "Team",
+      "description": "One of the 4 classroom competition teams",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nameVi": { "type": "string" },
+        "nameEn": { "type": "string" },
+        "color": { "type": "string" },
+        "flag": { "type": "string" },
+        "points": { "type": "number" },
+        "leaderId": { "type": "string" }
+      },
+      "required": ["id", "nameVi", "color"]
+    },
+    "StarTransaction": {
+      "title": "StarTransaction",
+      "description": "Audit record of star award or deduction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "deltaStars": { "type": "number" },
+        "reasonCategory": { "type": "string" },
+        "reasonNote": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["id", "studentId", "deltaStars", "timestamp"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Class activity notification",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "classId": { "type": "string" },
+        "type": { "type": "string" },
+        "titleVi": { "type": "string" },
+        "titleEn": { "type": "string" },
+        "messageVi": { "type": "string" },
+        "messageEn": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "targetRole": { "type": "string" },
+        "targetUserId": { "type": "string" },
+        "authorName": { "type": "string" }
+      },
+      "required": ["id", "classId", "titleVi", "timestamp"]
+    },
+    "NotificationRead": {
+      "title": "NotificationRead",
+      "description": "Per-user notification read status record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "notificationId": { "type": "string" },
+        "classId": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "readAt": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "notificationId", "isRead"]
+    }
+  },
+  "firestore": {
+    "/schools/{schoolId}": {
+      "schema": "School",
+      "description": "School details"
+    },
+    "/classes/{classId}": {
+      "schema": "Class",
+      "description": "Classroom details"
+    },
+    "/classes/{classId}/students/{studentId}": {
+      "schema": "Student",
+      "description": "Students belonging to the class"
+    },
+    "/classes/{classId}/teams/{teamId}": {
+      "schema": "Team",
+      "description": "Teams belonging to the class"
+    },
+    "/classes/{classId}/starTransactions/{txId}": {
+      "schema": "StarTransaction",
+      "description": "Star reward history log"
+    },
+    "/classes/{classId}/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Class notifications"
+    },
+    "/users/{userId}/notificationReads/{notificationId}": {
+      "schema": "NotificationRead",
+      "description": "User notification read states"
+    }
+  }
+}

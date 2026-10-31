@@ -1,0 +1,25 @@
+{
+  "name": "Ms. Thao's Star Kingdom - Vương quốc ngôi sao",
+  "short_name": "Star Kingdom",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F0F8FF",
+  "theme_color": "#47B5FF",
+  "description": "Ms. Thao's Star Kingdom - Vương quốc ngôi sao. Hệ thống quản lý lớp học tiểu học song ngữ Anh - Việt, thi đua 4 tổ, cộng trừ sao trực tiếp, đổi thưởng và vinh danh.",
+  "icons": [
+    {
+      "src": "/assets/kingdom/school_logo_v2.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/kingdom/school_logo_v2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
