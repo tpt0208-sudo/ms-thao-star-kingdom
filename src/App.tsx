@@ -945,6 +945,13 @@ export default function App() {
               )}
             </div>
           )}
+
+          {/* Official Website Footer */}
+          <footer className="mt-8 pt-6 pb-20 md:pb-8 border-t border-sky-100/80 text-center">
+            <p className="text-[11.5px] text-slate-400 font-medium tracking-wide">
+              © 2026 Phuong Thao Tran. All rights reserved.
+            </p>
+          </footer>
         </main>
       </div>
 

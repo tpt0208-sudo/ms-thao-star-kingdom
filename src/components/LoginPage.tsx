@@ -689,9 +689,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             </div>
 
             {/* Footer bilingual notice */}
-            <div className="pt-3 mt-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-600 font-bold gap-1">
-              <span>Hệ thống quản lý lớp học Song ngữ Việt – Anh • Bilingual Classroom System</span>
-              <span>© 2026 Ms. Thao's Star Kingdom • Vương quốc ngôi sao</span>
+            <div className="pt-3.5 mt-3.5 border-t border-slate-200 flex flex-col items-center justify-center text-center gap-1.5">
+              <span className="text-xs text-slate-600 font-bold">
+                Hệ thống quản lý lớp học Song ngữ Việt – Anh • Bilingual Classroom System
+              </span>
+              <span className="text-[11.5px] text-slate-500 font-medium tracking-wide">
+                © 2026 Phuong Thao Tran. All rights reserved.
+              </span>
             </div>
           </div>
 
