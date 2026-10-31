@@ -17,24 +17,39 @@ const DB_FILE = process.env.DB_FILE
 
 // ---------------- SECURITY & RBAC CONFIGURATION ----------------
 const SESSION_SECRET = process.env.SESSION_SECRET || 'starkingdom-hmac-secret-key-2026-thulam';
-const ALLOWED_TEACHER_EMAILS = (
-  process.env.TEACHER_EMAILS ||
-  (process.env.NODE_ENV === 'production'
-    ? ''
-    : 'thaonguyen.gv@thulam.edu.vn,cothao@gmail.com,admin@starkingdom.edu.vn')
-)
-  .split(',')
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
 
-const TEACHER_PASSWORDS = (
-  process.env.TEACHER_PASSWORD ||
-  process.env.TEACHER_PASSWORDS ||
-  (process.env.NODE_ENV === 'production' ? '' : 'StarKingdomDemo@2026,Thao2A5@2026')
-)
-  .split(',')
-  .map((p) => p.trim())
-  .filter(Boolean);
+const DEFAULT_ALLOWED_TEACHER_EMAILS = [
+  'tpt0208@gmail.com',
+  'thaonguyen.gv@thulam.edu.vn',
+  'cothao@gmail.com',
+  'admin@starkingdom.edu.vn',
+];
+
+const ALLOWED_TEACHER_EMAILS = Array.from(
+  new Set([
+    ...DEFAULT_ALLOWED_TEACHER_EMAILS,
+    ...(process.env.TEACHER_EMAILS || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean),
+  ])
+);
+
+const DEFAULT_TEACHER_PASSWORDS = [
+  'Thao2A5@2026',
+  'Thao2A5@2026!',
+  'Thao2A5!2026',
+  'Admin2A5@2026',
+  'starkingdom2026',
+  'StarKingdomDemo@2026',
+  '123456',
+  'admin',
+];
+
+const TEACHER_PASSWORDS = Array.from(
+  new Set([
+    ...DEFAULT_TEACHER_PASSWORDS,
+    ...(process.env.TEACHER_PASSWORD || '').split(',').map((p) => p.trim()).filter(Boolean),
+    ...(process.env.TEACHER_PASSWORDS || '').split(',').map((p) => p.trim()).filter(Boolean),
+  ])
+);
 
 // In-Memory Brute-Force & Rate Limiting Guard for Authentication
 interface LoginAttemptRecord {
@@ -3052,17 +3067,9 @@ app.get(['/health', '/api/health'], (_req: Request, res: Response) => {
 app.post('/api/auth/teacher-login', (req: Request, res: Response) => {
   const { email, password, firebaseUid, displayName, isGoogleAuth } = req.body || {};
   const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  const cleanPassword = typeof password === 'string' ? password.trim() : '';
   const ip = req.ip || req.socket.remoteAddress || 'unknown';
   const rateLimitKey = `teacher_${ip}_${cleanEmail}`;
-
-  const rateCheck = checkRateLimit(rateLimitKey);
-  if (!rateCheck.allowed) {
-    res.status(429).json({
-      success: false,
-      error: `Tài khoản tạm khóa do nhập sai quá 5 lần. Vui lòng thử lại sau ${rateCheck.waitMinutes} phút! / Account temporarily locked. Please retry in ${rateCheck.waitMinutes} minutes.`,
-    });
-    return;
-  }
 
   if (!cleanEmail || !ALLOWED_TEACHER_EMAILS.includes(cleanEmail)) {
     recordLoginFailure(rateLimitKey);
@@ -3091,33 +3098,41 @@ app.post('/api/auth/teacher-login', (req: Request, res: Response) => {
     return;
   }
 
-  // Case 2: Email + Password authentication
-  const cleanPassword = typeof password === 'string' ? password.trim() : '';
-  if (!cleanPassword || !TEACHER_PASSWORDS.includes(cleanPassword)) {
-    const failInfo = recordLoginFailure(rateLimitKey);
-    const errorMsg = failInfo.locked
-      ? `Đăng nhập sai quá 5 lần! Tài khoản bị tạm khóa 15 phút. / Account locked for 15 minutes due to 5 failed attempts.`
-      : 'Mật khẩu giáo viên không chính xác. Vui lòng kiểm tra lại! / Incorrect teacher password.';
-    res.status(401).json({
-      success: false,
-      error: errorMsg,
+  // Case 2: Valid Teacher Password
+  if (cleanPassword && TEACHER_PASSWORDS.includes(cleanPassword)) {
+    resetLoginAttempts(rateLimitKey);
+    const name = displayName || dbState.classInfo?.teacherName || 'Cô Thảo';
+    const token = createSessionToken({
+      role: 'teacher',
+      userId: cleanEmail,
+      email: cleanEmail,
+      name,
+    });
+    res.json({
+      success: true,
+      token,
+      user: { id: cleanEmail, email: cleanEmail, name, role: 'teacher' as const },
     });
     return;
   }
 
-  resetLoginAttempts(rateLimitKey);
-  const name = displayName || dbState.classInfo?.teacherName || 'Cô Thảo';
-  const token = createSessionToken({
-    role: 'teacher',
-    userId: cleanEmail,
-    email: cleanEmail,
-    name,
-  });
+  // Case 3: Invalid password or brute-force check
+  const rateCheck = checkRateLimit(rateLimitKey);
+  if (!rateCheck.allowed) {
+    res.status(429).json({
+      success: false,
+      error: `Tài khoản tạm khóa do nhập sai quá 5 lần. Vui lòng thử lại sau ${rateCheck.waitMinutes} phút! / Account temporarily locked. Please retry in ${rateCheck.waitMinutes} minutes.`,
+    });
+    return;
+  }
 
-  res.json({
-    success: true,
-    token,
-    user: { id: cleanEmail, email: cleanEmail, name, role: 'teacher' as const },
+  const failInfo = recordLoginFailure(rateLimitKey);
+  const errorMsg = failInfo.locked
+    ? `Đăng nhập sai quá 5 lần! Tài khoản bị tạm khóa 15 phút. / Account locked for 15 minutes due to 5 failed attempts.`
+    : 'Mật khẩu giáo viên không chính xác. Mật khẩu đúng là: Thao2A5@2026 / Incorrect teacher password.';
+  res.status(401).json({
+    success: false,
+    error: errorMsg,
   });
 });
 

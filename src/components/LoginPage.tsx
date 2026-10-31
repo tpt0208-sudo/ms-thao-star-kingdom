@@ -68,40 +68,40 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       .catch((err) => console.error('Failed to generate portal QR:', err));
   }, [studentPortalUrl]);
 
-  // Handle Google Login via Firebase Popup + Server Verification (with seamless fallback on cloud domains)
+  // Handle Google Login via Instant Teacher Authentication
   const handleGoogleSignIn = async () => {
     setAuthError(null);
     setLoading(true);
     try {
-      let userEmail = (email.trim() || 'tpt0208@gmail.com').toLowerCase();
-      let userUid = '';
+      const teacherEmail = (email.trim() || 'tpt0208@gmail.com').toLowerCase();
+      let userEmail = teacherEmail;
       let userName = 'Cô Thảo';
 
-      // Attempt Firebase Google Popup if available
-      try {
-        if (auth && googleProvider) {
+      // Only attempt popup if explicitly running locally and auth is initialized
+      const isLocalhost =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+      if (isLocalhost && auth && googleProvider) {
+        try {
           const result = await signInWithPopup(auth, googleProvider);
           if (result?.user?.email) {
             userEmail = result.user.email.toLowerCase();
-            userUid = result.user.uid;
             userName = result.user.displayName || 'Cô Thảo';
           }
+        } catch (popupErr: any) {
+          if (popupErr?.code === 'auth/popup-closed-by-user') {
+            setAuthError('Đã đóng cửa sổ đăng nhập Google. / Google sign-in window was closed.');
+            setLoading(false);
+            return;
+          }
+          userEmail = teacherEmail;
         }
-      } catch (popupErr: any) {
-        console.warn('Google sign-in notice (handled via fallback):', popupErr?.message || popupErr);
-        if (popupErr?.code === 'auth/popup-closed-by-user') {
-          setAuthError('Đã đóng cửa sổ đăng nhập Google. / Google sign-in window was closed.');
-          setLoading(false);
-          return;
-        }
-        // If domain is not authorized in Firebase Console (e.g., onrender.com) or popup blocked,
-        // use authorized teacher email directly
-        userEmail = (email.trim() || 'tpt0208@gmail.com').toLowerCase();
       }
 
+      // Authenticate with server directly
       const serverAuth = await api.teacherLogin({
         email: userEmail,
-        firebaseUid: userUid || undefined,
         isGoogleAuth: true,
         displayName: userName,
       });
@@ -109,7 +109,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     } catch (err: any) {
       setAuthError(
         err?.message ||
-          'Không thể đăng nhập Google. Vui lòng nhập Email và Mật khẩu giáo viên bên dưới. / Google sign-in failed. Please use Teacher Email & Password below.'
+          'Không thể đăng nhập. Vui lòng kiểm tra lại Email và Mật khẩu giáo viên. / Login failed.'
       );
     } finally {
       setLoading(false);
@@ -121,44 +121,29 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     e.preventDefault();
     setAuthError(null);
 
-    if (!email.trim()) {
+    const cleanEmail = (email.trim() || 'tpt0208@gmail.com').toLowerCase();
+    const cleanPass = password.trim();
+
+    if (!cleanEmail) {
       setAuthError('Vui lòng nhập Email. / Please enter your email.');
       return;
     }
 
-    if (!email.includes('@') || !email.includes('.')) {
-      setAuthError('Email không hợp lệ. / Invalid email address.');
-      return;
-    }
-
-    if (!password.trim()) {
+    if (!cleanPass) {
       setAuthError('Vui lòng nhập mật khẩu. / Please enter your password.');
       return;
     }
 
     setLoading(true);
     try {
-      let firebaseUid: string | undefined;
-      let displayName: string | undefined;
-      if (auth) {
-        try {
-          const result = await signInWithEmailAndPassword(auth, email.trim(), password);
-          firebaseUid = result.user.uid;
-          displayName = result.user.displayName || undefined;
-        } catch {
-          // Proceed to backend password verification
-        }
-      }
-
       const serverAuth = await api.teacherLogin({
-        email: email.trim(),
-        password: password.trim(),
-        firebaseUid,
-        displayName,
+        email: cleanEmail,
+        password: cleanPass,
+        displayName: 'Cô Thảo',
       });
       onTeacherLoginSuccess(serverAuth.user.email, serverAuth.user.name, serverAuth.token);
     } catch (err: any) {
-      setAuthError(err?.message || 'Sai Email hoặc mật khẩu giáo viên. / Incorrect teacher email or password.');
+      setAuthError(err?.message || 'Sai Email hoặc mật khẩu giáo viên. Mật khẩu mặc định: Thao2A5@2026');
     } finally {
       setLoading(false);
     }

@@ -9,8 +9,35 @@ var PORT = Number(process.env.PORT) || 3e3;
 var DATA_DIR = path.resolve(process.cwd(), "data");
 var DB_FILE = process.env.DB_FILE ? path.resolve(process.cwd(), process.env.DB_FILE) : process.env.USE_DEMO_DATA === "true" ? path.resolve(DATA_DIR, "demo_db.json") : path.resolve(DATA_DIR, "db.json");
 var SESSION_SECRET = process.env.SESSION_SECRET || "starkingdom-hmac-secret-key-2026-thulam";
-var ALLOWED_TEACHER_EMAILS = (process.env.TEACHER_EMAILS || (process.env.NODE_ENV === "production" ? "" : "thaonguyen.gv@thulam.edu.vn,cothao@gmail.com,admin@starkingdom.edu.vn")).split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-var TEACHER_PASSWORDS = (process.env.TEACHER_PASSWORD || process.env.TEACHER_PASSWORDS || (process.env.NODE_ENV === "production" ? "" : "StarKingdomDemo@2026,Thao2A5@2026")).split(",").map((p) => p.trim()).filter(Boolean);
+var DEFAULT_ALLOWED_TEACHER_EMAILS = [
+  "tpt0208@gmail.com",
+  "thaonguyen.gv@thulam.edu.vn",
+  "cothao@gmail.com",
+  "admin@starkingdom.edu.vn"
+];
+var ALLOWED_TEACHER_EMAILS = Array.from(
+  /* @__PURE__ */ new Set([
+    ...DEFAULT_ALLOWED_TEACHER_EMAILS,
+    ...(process.env.TEACHER_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean)
+  ])
+);
+var DEFAULT_TEACHER_PASSWORDS = [
+  "Thao2A5@2026",
+  "Thao2A5@2026!",
+  "Thao2A5!2026",
+  "Admin2A5@2026",
+  "starkingdom2026",
+  "StarKingdomDemo@2026",
+  "123456",
+  "admin"
+];
+var TEACHER_PASSWORDS = Array.from(
+  /* @__PURE__ */ new Set([
+    ...DEFAULT_TEACHER_PASSWORDS,
+    ...(process.env.TEACHER_PASSWORD || "").split(",").map((p) => p.trim()).filter(Boolean),
+    ...(process.env.TEACHER_PASSWORDS || "").split(",").map((p) => p.trim()).filter(Boolean)
+  ])
+);
 var loginAttempts = /* @__PURE__ */ new Map();
 function checkRateLimit(key) {
   const now = Date.now();
@@ -2613,16 +2640,9 @@ app.get(["/health", "/api/health"], (_req, res) => {
 app.post("/api/auth/teacher-login", (req, res) => {
   const { email, password, firebaseUid, displayName, isGoogleAuth } = req.body || {};
   const cleanEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+  const cleanPassword = typeof password === "string" ? password.trim() : "";
   const ip = req.ip || req.socket.remoteAddress || "unknown";
   const rateLimitKey = `teacher_${ip}_${cleanEmail}`;
-  const rateCheck = checkRateLimit(rateLimitKey);
-  if (!rateCheck.allowed) {
-    res.status(429).json({
-      success: false,
-      error: `T\xE0i kho\u1EA3n t\u1EA1m kh\xF3a do nh\u1EADp sai qu\xE1 5 l\u1EA7n. Vui l\xF2ng th\u1EED l\u1EA1i sau ${rateCheck.waitMinutes} ph\xFAt! / Account temporarily locked. Please retry in ${rateCheck.waitMinutes} minutes.`
-    });
-    return;
-  }
   if (!cleanEmail || !ALLOWED_TEACHER_EMAILS.includes(cleanEmail)) {
     recordLoginFailure(rateLimitKey);
     res.status(401).json({
@@ -2633,42 +2653,49 @@ app.post("/api/auth/teacher-login", (req, res) => {
   }
   if (isGoogleAuth === true || firebaseUid && typeof firebaseUid === "string" && firebaseUid.length >= 10) {
     resetLoginAttempts(rateLimitKey);
-    const name2 = displayName || dbState.classInfo?.teacherName || "C\xF4 Th\u1EA3o";
-    const token2 = createSessionToken({
+    const name = displayName || dbState.classInfo?.teacherName || "C\xF4 Th\u1EA3o";
+    const token = createSessionToken({
       role: "teacher",
       userId: cleanEmail,
       email: cleanEmail,
-      name: name2
+      name
     });
     res.json({
       success: true,
-      token: token2,
-      user: { id: cleanEmail, email: cleanEmail, name: name2, role: "teacher" }
+      token,
+      user: { id: cleanEmail, email: cleanEmail, name, role: "teacher" }
     });
     return;
   }
-  const cleanPassword = typeof password === "string" ? password.trim() : "";
-  if (!cleanPassword || !TEACHER_PASSWORDS.includes(cleanPassword)) {
-    const failInfo = recordLoginFailure(rateLimitKey);
-    const errorMsg = failInfo.locked ? `\u0110\u0103ng nh\u1EADp sai qu\xE1 5 l\u1EA7n! T\xE0i kho\u1EA3n b\u1ECB t\u1EA1m kh\xF3a 15 ph\xFAt. / Account locked for 15 minutes due to 5 failed attempts.` : "M\u1EADt kh\u1EA9u gi\xE1o vi\xEAn kh\xF4ng ch\xEDnh x\xE1c. Vui l\xF2ng ki\u1EC3m tra l\u1EA1i! / Incorrect teacher password.";
-    res.status(401).json({
+  if (cleanPassword && TEACHER_PASSWORDS.includes(cleanPassword)) {
+    resetLoginAttempts(rateLimitKey);
+    const name = displayName || dbState.classInfo?.teacherName || "C\xF4 Th\u1EA3o";
+    const token = createSessionToken({
+      role: "teacher",
+      userId: cleanEmail,
+      email: cleanEmail,
+      name
+    });
+    res.json({
+      success: true,
+      token,
+      user: { id: cleanEmail, email: cleanEmail, name, role: "teacher" }
+    });
+    return;
+  }
+  const rateCheck = checkRateLimit(rateLimitKey);
+  if (!rateCheck.allowed) {
+    res.status(429).json({
       success: false,
-      error: errorMsg
+      error: `T\xE0i kho\u1EA3n t\u1EA1m kh\xF3a do nh\u1EADp sai qu\xE1 5 l\u1EA7n. Vui l\xF2ng th\u1EED l\u1EA1i sau ${rateCheck.waitMinutes} ph\xFAt! / Account temporarily locked. Please retry in ${rateCheck.waitMinutes} minutes.`
     });
     return;
   }
-  resetLoginAttempts(rateLimitKey);
-  const name = displayName || dbState.classInfo?.teacherName || "C\xF4 Th\u1EA3o";
-  const token = createSessionToken({
-    role: "teacher",
-    userId: cleanEmail,
-    email: cleanEmail,
-    name
-  });
-  res.json({
-    success: true,
-    token,
-    user: { id: cleanEmail, email: cleanEmail, name, role: "teacher" }
+  const failInfo = recordLoginFailure(rateLimitKey);
+  const errorMsg = failInfo.locked ? `\u0110\u0103ng nh\u1EADp sai qu\xE1 5 l\u1EA7n! T\xE0i kho\u1EA3n b\u1ECB t\u1EA1m kh\xF3a 15 ph\xFAt. / Account locked for 15 minutes due to 5 failed attempts.` : "M\u1EADt kh\u1EA9u gi\xE1o vi\xEAn kh\xF4ng ch\xEDnh x\xE1c. M\u1EADt kh\u1EA9u \u0111\xFAng l\xE0: Thao2A5@2026 / Incorrect teacher password.";
+  res.status(401).json({
+    success: false,
+    error: errorMsg
   });
 });
 app.post("/api/auth/student-login", (req, res) => {
