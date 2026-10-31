@@ -472,17 +472,33 @@ export const ClassNewsView: React.FC<ClassNewsViewProps> = ({
     displayedPosts = activePosts.filter((item) => {
       // Tab filter
       if (activeViewTab === 'pinned' && !item.pinned && !item.isPinned) return false;
+      
+      // On main 'all' feed: only show 1 automated birthday bulletin for the current active month
+      if (activeViewTab === 'all') {
+        const isAutoMonthlyBirthday =
+          item.id.startsWith('news_birthday_') ||
+          item.tags?.some((t) => t.startsWith('Sinh nhật tháng '));
+        if (isAutoMonthlyBirthday) {
+          const isCurrentMonthPost =
+            item.id.includes(`_m${currentMonth}`) ||
+            item.tags?.includes(`Sinh nhật tháng ${currentMonth}`) ||
+            item.title?.includes(`Tháng ${currentMonth}`);
+          if (!isCurrentMonthPost) return false;
+        }
+      }
+
       if (activeViewTab === 'birthday') {
         const isBday =
           item.tags?.some((t) => t.toLowerCase().includes('sinh nhật')) ||
           item.title?.toLowerCase().includes('sinh nhật');
         if (!isBday) return false;
 
-        if (selectedBirthdayMonth !== 'all') {
-          const matchMonthTag = item.tags?.includes(`Sinh nhật tháng ${selectedBirthdayMonth}`);
-          const matchTitle = item.title?.includes(`Tháng ${selectedBirthdayMonth}`);
-          const matchContent = item.content?.includes(`Tháng ${selectedBirthdayMonth}`);
-          if (!matchMonthTag && !matchTitle && !matchContent) return false;
+        const targetM = selectedBirthdayMonth === 'all' ? currentMonth : selectedBirthdayMonth;
+        const matchMonthTag = item.tags?.includes(`Sinh nhật tháng ${targetM}`);
+        const matchTitle = item.title?.includes(`Tháng ${targetM}`);
+        const matchContent = item.content?.includes(`Tháng ${targetM}`);
+        if (!matchMonthTag && !matchTitle && !matchContent && item.id.startsWith('news_birthday_')) {
+          return false;
         }
       }
       if (activeViewTab === 'my') {

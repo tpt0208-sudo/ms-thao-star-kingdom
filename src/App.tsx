@@ -217,10 +217,13 @@ export default function App() {
   };
 
 
-  // Load state on start
-  const fetchState = async () => {
+  // Load state on start & background silent revalidation for high-speed responsiveness
+  const fetchState = async (silent?: boolean | unknown) => {
+    const isSilent = typeof silent === 'boolean' ? silent : true;
     try {
-      setLoading(true);
+      if (!isSilent) {
+        setLoading(true);
+      }
       const data = await api.getState();
       setAppState(data);
       // Cache fresh state for offline use
@@ -236,12 +239,14 @@ export default function App() {
         setError(err instanceof Error ? err.message : 'Lỗi khi tải dữ liệu lớp học');
       }
     } finally {
-      setLoading(false);
+      if (!isSilent) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchState();
+    fetchState(false);
 
     // Auto-sync when reconnecting to network
     const handleOnline = async () => {
@@ -485,7 +490,7 @@ export default function App() {
         <div className="bg-white rounded-3xl p-6 max-w-md text-center shadow-lg border border-rose-200">
           <p className="text-sm font-bold text-rose-600 mb-3">{error || 'Không tải được dữ liệu'}</p>
           <button
-            onClick={fetchState}
+            onClick={() => fetchState(false)}
             className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-black text-xs cursor-pointer"
           >
             Thử lại

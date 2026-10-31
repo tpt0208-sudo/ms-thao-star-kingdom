@@ -4,6 +4,7 @@ import { createServer as createViteServer } from 'vite';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import zlib from 'zlib';
 import type { AppState, ClassInfo, Student, Team, StarTransaction, AttendanceRecord, LearningResource, AcademicCalendarConfig, FinalizedResult, AuditLogEntry, ClassNewsItem, AppNotification, NotificationReadRecord } from './src/types.ts';
 
 const app = express();
@@ -210,6 +211,33 @@ export function requireStudentOrTeacher(req: Request, res: Response, next: NextF
 
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+
+// High-speed response compression middleware (Gzip native) for faster web processing
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const acceptEncoding = (req.headers['accept-encoding'] as string) || '';
+  if (!acceptEncoding.includes('gzip')) {
+    return next();
+  }
+
+  const originalSend = res.send.bind(res);
+  res.send = function (body: any): Response {
+    if (body && (typeof body === 'string' || Buffer.isBuffer(body))) {
+      const buffer = Buffer.isBuffer(body) ? body : Buffer.from(body);
+      if (buffer.length > 1024) {
+        try {
+          const compressed = zlib.gzipSync(buffer, { level: 6 });
+          res.setHeader('Content-Encoding', 'gzip');
+          res.setHeader('Vary', 'Accept-Encoding');
+          return originalSend(compressed);
+        } catch {
+          return originalSend(body);
+        }
+      }
+    }
+    return originalSend(body);
+  };
+  next();
+});
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -805,62 +833,56 @@ function calculateLevel(stars: number, rules: AppState['levelRules']): number {
 }
 
 // Automatically create or update periodic monthly birthday news bulletins based on students' DOB
+// Generates and maintains EXACTLY 1 active bulletin updated for the current month
 export function syncMonthlyBirthdayNews(classId: string, specificMonth?: number): { updatedCount: number; affectedMonths: number[] } {
   const currentClass = dbState.classes.find(c => c.id === classId) || dbState.classInfo;
   const className = currentClass?.nameVi || 'Lớp 2A5';
   const teacherName = currentClass?.teacherName || 'Cô Thảo';
   const students = dbState.students.filter(s => s.classId === classId && !s.archived);
 
-  // Group students by birth month
-  const monthMap: Record<number, Student[]> = {};
-  for (let m = 1; m <= 12; m++) {
-    monthMap[m] = [];
-  }
+  const now = new Date();
+  const currentMonth = specificMonth || (now.getMonth() + 1); // 1 to 12
 
-  students.forEach(st => {
+  // Group students by birth month
+  const celebrants = students.filter(st => {
     const parsed = parseBirthDate(st.dob);
-    if (parsed) {
-      monthMap[parsed.month].push(st);
-    }
+    return parsed && parsed.month === currentMonth;
   });
 
-  const now = new Date();
-  const currentMonth = now.getMonth() + 1; // 1 to 12
-  const affectedMonths: number[] = [];
-  let updatedCount = 0;
+  celebrants.sort((a, b) => {
+    const pA = parseBirthDate(a.dob)?.day || 0;
+    const pB = parseBirthDate(b.dob)?.day || 0;
+    return pA - pB;
+  });
 
-  const monthsToProcess = specificMonth ? [specificMonth] : Array.from({ length: 12 }, (_, i) => i + 1);
-
-  monthsToProcess.forEach(m => {
-    const celebrants = monthMap[m];
-    celebrants.sort((a, b) => {
-      const pA = parseBirthDate(a.dob)?.day || 0;
-      const pB = parseBirthDate(b.dob)?.day || 0;
-      return pA - pB;
-    });
-
-    if (celebrants.length === 0) {
-      return;
+  // Purge any redundant old monthly birthday bulletins from other months so only 1 bulletin exists
+  dbState.news = dbState.news.filter(n => {
+    if (n.classId === classId && n.id.startsWith('news_birthday_')) {
+      return n.id === `news_birthday_${classId}_m${currentMonth}`;
     }
+    return true;
+  });
 
-    affectedMonths.push(m);
-    updatedCount++;
+  if (celebrants.length === 0) {
+    saveDb(dbState);
+    return { updatedCount: 0, affectedMonths: [currentMonth] };
+  }
 
-    const title = `🎂 Bản Tin Sinh Nhật Tháng ${m} / Month ${m} Birthday Bulletin – ${className} 🎉`;
-    
-    const celebrantsListText = celebrants.map(s => {
-      const parsed = parseBirthDate(s.dob);
-      const team = dbState.teams.find(t => t.id === s.teamId);
-      const teamName = team ? team.nameVi.split(':')[0] : 'Vương quốc';
-      const dayStr = parsed ? String(parsed.day).padStart(2, '0') : '??';
-      const isToday = (m === currentMonth && parsed && parsed.day === now.getDate());
-      const todayBadge = isToday ? ' 🎈 [HÔM NAY SINH NHẬT! / BIRTHDAY TODAY!]' : '';
-      return `⭐ Ngày ${dayStr}/${String(m).padStart(2, '0')}: ${s.fullName} (${s.studentCode} • ${teamName})${todayBadge}\n   ↳ 💌 Lời chúc: Chúc bạn tuổi mới luôn rạng rỡ, chăm ngoan, học giỏi và gặt hái thật nhiều ngôi sao lấp lánh!\n   ↳ 🇬🇧 Wish: Wishing you a bright, happy new age filled with joy and sparkling stars!`;
-    }).join('\n\n');
+  const title = `🎂 Bản Tin Sinh Nhật Tháng ${currentMonth} – ${className} 🎉`;
+  
+  const celebrantsListText = celebrants.map(s => {
+    const parsed = parseBirthDate(s.dob);
+    const team = dbState.teams.find(t => t.id === s.teamId);
+    const teamName = team ? team.nameVi.split(':')[0] : 'Vương quốc';
+    const dayStr = parsed ? String(parsed.day).padStart(2, '0') : '??';
+    const isToday = (parsed && parsed.day === now.getDate());
+    const todayBadge = isToday ? ' 🎈 [HÔM NAY SINH NHẬT! / BIRTHDAY TODAY!]' : '';
+    return `⭐ Ngày ${dayStr}/${String(currentMonth).padStart(2, '0')}: ${s.fullName} (${s.studentCode} • ${teamName})${todayBadge}\n   ↳ 💌 Lời chúc: Chúc bạn tuổi mới luôn rạng rỡ, chăm ngoan, học giỏi và gặt hái thật nhiều ngôi sao lấp lánh!\n   ↳ 🇬🇧 Wish: Wishing you a bright, happy new age filled with joy and sparkling stars!`;
+  }).join('\n\n');
 
-    const content = `🌟 LOA LOA LOA! TIN VUI TỪ VƯƠNG QUỐC NGÔI SAO! / HAPPY BIRTHDAY FROM STAR KINGDOM! 🎈✨
-Tháng ${m} rộn ràng tiếng ca, cô ${teacherName} cùng cả lớp ${className} xin gửi những lời chúc mừng sinh nhật ngọt ngào và ấm áp nhất tới ${celebrants.length} "ngôi sao nhỏ" đáng yêu có ngày sinh trong tháng này:
-Warmest birthday wishes from ${teacherName} and ${className} to our ${celebrants.length} shining little stars born in Month ${m}:
+  const content = `🌟 LOA LOA LOA! TIN VUI TỪ VƯƠNG QUỐC NGÔI SAO! / HAPPY BIRTHDAY FROM STAR KINGDOM! 🎈✨
+Tháng ${currentMonth} rộn ràng tiếng ca, cô ${teacherName} cùng cả lớp ${className} xin gửi những lời chúc mừng sinh nhật ngọt ngào và ấm áp nhất tới ${celebrants.length} "ngôi sao nhỏ" đáng yêu có ngày sinh trong tháng này:
+Warmest birthday wishes from ${teacherName} and ${className} to our ${celebrants.length} shining little stars born in Month ${currentMonth}:
 
 ${celebrantsListText}
 
@@ -871,56 +893,57 @@ ${celebrantsListText}
 
 💖 Chúc các thiên thần nhỏ của lớp ${className} tuổi mới ngập tràn niềm vui, luôn tự tin tỏa sáng và chạm tới những ước mơ tuyệt vời nhất! / Wishing our little angels endless joy, confidence, and shining dreams! 🌟🎂🎈`;
 
-    const birthdayImages = [
-      'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80',
-    ];
+  const birthdayImages = [
+    'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80',
+  ];
 
-    const existingIndex = dbState.news.findIndex(n => 
-      n.classId === classId && 
-      !n.isDeleted && 
-      (n.tags?.includes(`Sinh nhật tháng ${m}`) || n.title.includes(`Bản Tin Sinh Nhật Tháng ${m}`) || n.title.includes(`Bản tin sinh nhật Tháng ${m}`))
-    );
+  const targetId = `news_birthday_${classId}_m${currentMonth}`;
+  const existingIndex = dbState.news.findIndex(n => 
+    n.classId === classId && 
+    !n.isDeleted && 
+    (n.id === targetId || n.tags?.includes(`Sinh nhật tháng ${currentMonth}`))
+  );
 
-    if (existingIndex !== -1) {
-      const existing = dbState.news[existingIndex];
-      dbState.news[existingIndex] = {
-        ...existing,
-        title,
-        content,
-        author: teacherName,
-        tags: Array.from(new Set([...(existing.tags || []), 'Sinh nhật', `Sinh nhật tháng ${m}`, 'Bản tin tháng', 'Chúc mừng'])),
-        images: existing.images && existing.images.length > 0 ? existing.images : birthdayImages,
-        imageUrl: existing.imageUrl || birthdayImages[0],
-        pinned: m === currentMonth ? true : existing.pinned,
-        isPinned: m === currentMonth ? true : existing.isPinned,
-        isEdited: true,
-        updatedAt: new Date().toISOString(),
-        updatedBy: 'Hệ thống tự động',
-      };
-    } else {
-      const newPost: ClassNewsItem = {
-        id: `news_birthday_${classId}_m${m}`,
-        classId,
-        title,
-        content,
-        author: teacherName,
-        date: new Date().toISOString().slice(0, 10),
-        pinned: m === currentMonth,
-        isPinned: m === currentMonth,
-        tags: ['Sinh nhật', `Sinh nhật tháng ${m}`, 'Bản tin tháng', 'Chúc mừng'],
-        likes: 16 + celebrants.length * 2,
-        imageUrl: birthdayImages[0],
-        images: birthdayImages,
-        visibility: 'all',
-        isDeleted: false,
-      };
-      dbState.news.unshift(newPost);
-    }
-  });
+  if (existingIndex !== -1) {
+    const existing = dbState.news[existingIndex];
+    dbState.news[existingIndex] = {
+      ...existing,
+      id: targetId,
+      title,
+      content,
+      author: teacherName,
+      tags: ['Sinh nhật', `Sinh nhật tháng ${currentMonth}`, 'Bản tin tháng', 'Chúc mừng'],
+      images: existing.images && existing.images.length > 0 ? existing.images : birthdayImages,
+      imageUrl: existing.imageUrl || birthdayImages[0],
+      pinned: true,
+      isPinned: true,
+      isEdited: true,
+      updatedAt: new Date().toISOString(),
+      updatedBy: 'Hệ thống tự động',
+    };
+  } else {
+    const newPost: ClassNewsItem = {
+      id: targetId,
+      classId,
+      title,
+      content,
+      author: teacherName,
+      date: new Date().toISOString().slice(0, 10),
+      pinned: true,
+      isPinned: true,
+      tags: ['Sinh nhật', `Sinh nhật tháng ${currentMonth}`, 'Bản tin tháng', 'Chúc mừng'],
+      likes: 18 + celebrants.length * 2,
+      imageUrl: birthdayImages[0],
+      images: birthdayImages,
+      visibility: 'all',
+      isDeleted: false,
+    };
+    dbState.news.unshift(newPost);
+  }
 
   saveDb(dbState);
-  return { updatedCount, affectedMonths };
+  return { updatedCount: 1, affectedMonths: [currentMonth] };
 }
 
 // Initial automatic birthday news synchronization on startup for all classes

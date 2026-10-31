@@ -17,24 +17,17 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
   return (
     <div className="relative w-full rounded-3xl overflow-hidden shadow-md border-2 border-sky-200/80 group">
-      {/* If teacher uploaded a custom cover, show it. Otherwise show the exact Star Kingdom Fairytale Castle artwork! */}
+      {/* If teacher uploaded a custom cover, show ONLY the image cleanly with NO text overlay! */}
       {customCover ? (
-        <div
-          className="w-full min-h-[220px] md:min-h-[280px] bg-cover bg-center flex items-center p-6 sm:p-8 relative"
-          style={{ backgroundImage: `url(${customCover})` }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/50 to-transparent"></div>
-          <div className="relative z-10 max-w-lg">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#D97706] tracking-tight drop-shadow-xs font-['Fredoka',sans-serif]">
-              {classInfo.nameVi} - Ms. Thao's Star Kingdom
-            </h1>
-            <p className="text-sm sm:text-base font-black text-[#263C72] mb-3">
-              {classInfo.sloganVi}
-            </p>
-            <div className="inline-block bg-white/95 px-4 py-1.5 rounded-2xl shadow-xs border border-amber-300">
-              <span className="text-xs font-bold text-sky-700">{classInfo.sloganEn}</span>
-            </div>
-          </div>
+        <div className="relative w-full overflow-hidden flex items-center justify-center bg-slate-50">
+          <img
+            src={customCover}
+            alt="Ms. Thao's Star Kingdom Banner"
+            className="w-full h-auto object-cover max-h-[340px] select-none block"
+            onError={(e) => {
+              (e.target as HTMLElement).style.display = 'none';
+            }}
+          />
         </div>
       ) : (
         /* The authentic Fairytale Castle banner from Mockup */
@@ -42,7 +35,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
           <img
             src="/assets/kingdom/hero_banner.png"
             alt="Ms. Thao's Star Kingdom Castle"
-            className="w-full h-auto object-cover max-h-[310px] select-none"
+            className="w-full h-auto object-cover max-h-[340px] select-none block"
             onError={(e) => {
               (e.target as HTMLElement).style.display = 'none';
             }}

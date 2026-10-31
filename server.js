@@ -4,6 +4,7 @@ import { createServer as createViteServer } from "vite";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
+import zlib from "zlib";
 var app = express();
 var PORT = Number(process.env.PORT) || 3e3;
 var DATA_DIR = path.resolve(process.cwd(), "data");
@@ -166,6 +167,30 @@ function requireStudentOrTeacher(req, res, next) {
 }
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+app.use((req, res, next) => {
+  const acceptEncoding = req.headers["accept-encoding"] || "";
+  if (!acceptEncoding.includes("gzip")) {
+    return next();
+  }
+  const originalSend = res.send.bind(res);
+  res.send = function(body) {
+    if (body && (typeof body === "string" || Buffer.isBuffer(body))) {
+      const buffer = Buffer.isBuffer(body) ? body : Buffer.from(body);
+      if (buffer.length > 1024) {
+        try {
+          const compressed = zlib.gzipSync(buffer, { level: 6 });
+          res.setHeader("Content-Encoding", "gzip");
+          res.setHeader("Vary", "Accept-Encoding");
+          return originalSend(compressed);
+        } catch {
+          return originalSend(body);
+        }
+      }
+    }
+    return originalSend(body);
+  };
+  next();
+});
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
@@ -726,48 +751,42 @@ function syncMonthlyBirthdayNews(classId, specificMonth) {
   const className = currentClass?.nameVi || "L\u1EDBp 2A5";
   const teacherName = currentClass?.teacherName || "C\xF4 Th\u1EA3o";
   const students = dbState.students.filter((s) => s.classId === classId && !s.archived);
-  const monthMap = {};
-  for (let m = 1; m <= 12; m++) {
-    monthMap[m] = [];
-  }
-  students.forEach((st) => {
-    const parsed = parseBirthDate(st.dob);
-    if (parsed) {
-      monthMap[parsed.month].push(st);
-    }
-  });
   const now = /* @__PURE__ */ new Date();
-  const currentMonth = now.getMonth() + 1;
-  const affectedMonths = [];
-  let updatedCount = 0;
-  const monthsToProcess = specificMonth ? [specificMonth] : Array.from({ length: 12 }, (_, i) => i + 1);
-  monthsToProcess.forEach((m) => {
-    const celebrants = monthMap[m];
-    celebrants.sort((a, b) => {
-      const pA = parseBirthDate(a.dob)?.day || 0;
-      const pB = parseBirthDate(b.dob)?.day || 0;
-      return pA - pB;
-    });
-    if (celebrants.length === 0) {
-      return;
+  const currentMonth = specificMonth || now.getMonth() + 1;
+  const celebrants = students.filter((st) => {
+    const parsed = parseBirthDate(st.dob);
+    return parsed && parsed.month === currentMonth;
+  });
+  celebrants.sort((a, b) => {
+    const pA = parseBirthDate(a.dob)?.day || 0;
+    const pB = parseBirthDate(b.dob)?.day || 0;
+    return pA - pB;
+  });
+  dbState.news = dbState.news.filter((n) => {
+    if (n.classId === classId && n.id.startsWith("news_birthday_")) {
+      return n.id === `news_birthday_${classId}_m${currentMonth}`;
     }
-    affectedMonths.push(m);
-    updatedCount++;
-    const title = `\u{1F382} B\u1EA3n Tin Sinh Nh\u1EADt Th\xE1ng ${m} / Month ${m} Birthday Bulletin \u2013 ${className} \u{1F389}`;
-    const celebrantsListText = celebrants.map((s) => {
-      const parsed = parseBirthDate(s.dob);
-      const team = dbState.teams.find((t) => t.id === s.teamId);
-      const teamName = team ? team.nameVi.split(":")[0] : "V\u01B0\u01A1ng qu\u1ED1c";
-      const dayStr = parsed ? String(parsed.day).padStart(2, "0") : "??";
-      const isToday = m === currentMonth && parsed && parsed.day === now.getDate();
-      const todayBadge = isToday ? " \u{1F388} [H\xD4M NAY SINH NH\u1EACT! / BIRTHDAY TODAY!]" : "";
-      return `\u2B50 Ng\xE0y ${dayStr}/${String(m).padStart(2, "0")}: ${s.fullName} (${s.studentCode} \u2022 ${teamName})${todayBadge}
+    return true;
+  });
+  if (celebrants.length === 0) {
+    saveDb(dbState);
+    return { updatedCount: 0, affectedMonths: [currentMonth] };
+  }
+  const title = `\u{1F382} B\u1EA3n Tin Sinh Nh\u1EADt Th\xE1ng ${currentMonth} \u2013 ${className} \u{1F389}`;
+  const celebrantsListText = celebrants.map((s) => {
+    const parsed = parseBirthDate(s.dob);
+    const team = dbState.teams.find((t) => t.id === s.teamId);
+    const teamName = team ? team.nameVi.split(":")[0] : "V\u01B0\u01A1ng qu\u1ED1c";
+    const dayStr = parsed ? String(parsed.day).padStart(2, "0") : "??";
+    const isToday = parsed && parsed.day === now.getDate();
+    const todayBadge = isToday ? " \u{1F388} [H\xD4M NAY SINH NH\u1EACT! / BIRTHDAY TODAY!]" : "";
+    return `\u2B50 Ng\xE0y ${dayStr}/${String(currentMonth).padStart(2, "0")}: ${s.fullName} (${s.studentCode} \u2022 ${teamName})${todayBadge}
    \u21B3 \u{1F48C} L\u1EDDi ch\xFAc: Ch\xFAc b\u1EA1n tu\u1ED5i m\u1EDBi lu\xF4n r\u1EA1ng r\u1EE1, ch\u0103m ngoan, h\u1ECDc gi\u1ECFi v\xE0 g\u1EB7t h\xE1i th\u1EADt nhi\u1EC1u ng\xF4i sao l\u1EA5p l\xE1nh!
    \u21B3 \u{1F1EC}\u{1F1E7} Wish: Wishing you a bright, happy new age filled with joy and sparkling stars!`;
-    }).join("\n\n");
-    const content = `\u{1F31F} LOA LOA LOA! TIN VUI T\u1EEA V\u01AF\u01A0NG QU\u1ED0C NG\xD4I SAO! / HAPPY BIRTHDAY FROM STAR KINGDOM! \u{1F388}\u2728
-Th\xE1ng ${m} r\u1ED9n r\xE0ng ti\u1EBFng ca, c\xF4 ${teacherName} c\xF9ng c\u1EA3 l\u1EDBp ${className} xin g\u1EEDi nh\u1EEFng l\u1EDDi ch\xFAc m\u1EEBng sinh nh\u1EADt ng\u1ECDt ng\xE0o v\xE0 \u1EA5m \xE1p nh\u1EA5t t\u1EDBi ${celebrants.length} "ng\xF4i sao nh\u1ECF" \u0111\xE1ng y\xEAu c\xF3 ng\xE0y sinh trong th\xE1ng n\xE0y:
-Warmest birthday wishes from ${teacherName} and ${className} to our ${celebrants.length} shining little stars born in Month ${m}:
+  }).join("\n\n");
+  const content = `\u{1F31F} LOA LOA LOA! TIN VUI T\u1EEA V\u01AF\u01A0NG QU\u1ED0C NG\xD4I SAO! / HAPPY BIRTHDAY FROM STAR KINGDOM! \u{1F388}\u2728
+Th\xE1ng ${currentMonth} r\u1ED9n r\xE0ng ti\u1EBFng ca, c\xF4 ${teacherName} c\xF9ng c\u1EA3 l\u1EDBp ${className} xin g\u1EEDi nh\u1EEFng l\u1EDDi ch\xFAc m\u1EEBng sinh nh\u1EADt ng\u1ECDt ng\xE0o v\xE0 \u1EA5m \xE1p nh\u1EA5t t\u1EDBi ${celebrants.length} "ng\xF4i sao nh\u1ECF" \u0111\xE1ng y\xEAu c\xF3 ng\xE0y sinh trong th\xE1ng n\xE0y:
+Warmest birthday wishes from ${teacherName} and ${className} to our ${celebrants.length} shining little stars born in Month ${currentMonth}:
 
 ${celebrantsListText}
 
@@ -777,51 +796,52 @@ ${celebrantsListText}
 \u2022 Nh\u1EADn thi\u1EC7p ch\xFAc m\u1EEBng v\u01B0\u01A1ng qu\u1ED1c r\u1EA1ng r\u1EE1 c\xF9ng nh\u1EEFng c\xE1i \xF4m \u1EA5m \xE1p t\u1EEB c\xF4 v\xE0 c\xE1c b\u1EA1n! (Kingdom Greeting Card & Warm Hugs!)
 
 \u{1F496} Ch\xFAc c\xE1c thi\xEAn th\u1EA7n nh\u1ECF c\u1EE7a l\u1EDBp ${className} tu\u1ED5i m\u1EDBi ng\u1EADp tr\xE0n ni\u1EC1m vui, lu\xF4n t\u1EF1 tin t\u1ECFa s\xE1ng v\xE0 ch\u1EA1m t\u1EDBi nh\u1EEFng \u01B0\u1EDBc m\u01A1 tuy\u1EC7t v\u1EDDi nh\u1EA5t! / Wishing our little angels endless joy, confidence, and shining dreams! \u{1F31F}\u{1F382}\u{1F388}`;
-    const birthdayImages = [
-      "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80"
-    ];
-    const existingIndex = dbState.news.findIndex(
-      (n) => n.classId === classId && !n.isDeleted && (n.tags?.includes(`Sinh nh\u1EADt th\xE1ng ${m}`) || n.title.includes(`B\u1EA3n Tin Sinh Nh\u1EADt Th\xE1ng ${m}`) || n.title.includes(`B\u1EA3n tin sinh nh\u1EADt Th\xE1ng ${m}`))
-    );
-    if (existingIndex !== -1) {
-      const existing = dbState.news[existingIndex];
-      dbState.news[existingIndex] = {
-        ...existing,
-        title,
-        content,
-        author: teacherName,
-        tags: Array.from(/* @__PURE__ */ new Set([...existing.tags || [], "Sinh nh\u1EADt", `Sinh nh\u1EADt th\xE1ng ${m}`, "B\u1EA3n tin th\xE1ng", "Ch\xFAc m\u1EEBng"])),
-        images: existing.images && existing.images.length > 0 ? existing.images : birthdayImages,
-        imageUrl: existing.imageUrl || birthdayImages[0],
-        pinned: m === currentMonth ? true : existing.pinned,
-        isPinned: m === currentMonth ? true : existing.isPinned,
-        isEdited: true,
-        updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
-        updatedBy: "H\u1EC7 th\u1ED1ng t\u1EF1 \u0111\u1ED9ng"
-      };
-    } else {
-      const newPost = {
-        id: `news_birthday_${classId}_m${m}`,
-        classId,
-        title,
-        content,
-        author: teacherName,
-        date: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
-        pinned: m === currentMonth,
-        isPinned: m === currentMonth,
-        tags: ["Sinh nh\u1EADt", `Sinh nh\u1EADt th\xE1ng ${m}`, "B\u1EA3n tin th\xE1ng", "Ch\xFAc m\u1EEBng"],
-        likes: 16 + celebrants.length * 2,
-        imageUrl: birthdayImages[0],
-        images: birthdayImages,
-        visibility: "all",
-        isDeleted: false
-      };
-      dbState.news.unshift(newPost);
-    }
-  });
+  const birthdayImages = [
+    "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80"
+  ];
+  const targetId = `news_birthday_${classId}_m${currentMonth}`;
+  const existingIndex = dbState.news.findIndex(
+    (n) => n.classId === classId && !n.isDeleted && (n.id === targetId || n.tags?.includes(`Sinh nh\u1EADt th\xE1ng ${currentMonth}`))
+  );
+  if (existingIndex !== -1) {
+    const existing = dbState.news[existingIndex];
+    dbState.news[existingIndex] = {
+      ...existing,
+      id: targetId,
+      title,
+      content,
+      author: teacherName,
+      tags: ["Sinh nh\u1EADt", `Sinh nh\u1EADt th\xE1ng ${currentMonth}`, "B\u1EA3n tin th\xE1ng", "Ch\xFAc m\u1EEBng"],
+      images: existing.images && existing.images.length > 0 ? existing.images : birthdayImages,
+      imageUrl: existing.imageUrl || birthdayImages[0],
+      pinned: true,
+      isPinned: true,
+      isEdited: true,
+      updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      updatedBy: "H\u1EC7 th\u1ED1ng t\u1EF1 \u0111\u1ED9ng"
+    };
+  } else {
+    const newPost = {
+      id: targetId,
+      classId,
+      title,
+      content,
+      author: teacherName,
+      date: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+      pinned: true,
+      isPinned: true,
+      tags: ["Sinh nh\u1EADt", `Sinh nh\u1EADt th\xE1ng ${currentMonth}`, "B\u1EA3n tin th\xE1ng", "Ch\xFAc m\u1EEBng"],
+      likes: 18 + celebrants.length * 2,
+      imageUrl: birthdayImages[0],
+      images: birthdayImages,
+      visibility: "all",
+      isDeleted: false
+    };
+    dbState.news.unshift(newPost);
+  }
   saveDb(dbState);
-  return { updatedCount, affectedMonths };
+  return { updatedCount: 1, affectedMonths: [currentMonth] };
 }
 try {
   const demoDobMap = new Map(getDemoStudents("class_2a5").map((s) => [s.fullName, s.dob]));
