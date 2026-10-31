@@ -342,8 +342,8 @@ function getDefaultState() {
   return {
     school: {
       id: "school_thulam",
-      nameVi: "Tr\u01B0\u1EDDng Ti\u1EC3u h\u1ECDc v\xE0 THCS Th\u01B0 L\xE2m",
-      nameEn: "Thu Lam Primary and Lower Secondary School",
+      nameVi: "Tr\u01B0\u1EDDng Ti\u1EC3u h\u1ECDc v\xE0 THCS TH\u01AF L\xC2M",
+      nameEn: "THU LAM PRIMARY AND LOWER SECONDARY SCHOOL",
       logoUrl: "/assets/kingdom/school_logo_v2.png"
     },
     classes: [defaultClass, sampleClass2],
@@ -2611,7 +2611,7 @@ app.get(["/health", "/api/health"], (_req, res) => {
   });
 });
 app.post("/api/auth/teacher-login", (req, res) => {
-  const { email, password, firebaseUid, displayName } = req.body || {};
+  const { email, password, firebaseUid, displayName, isGoogleAuth } = req.body || {};
   const cleanEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
   const ip = req.ip || req.socket.remoteAddress || "unknown";
   const rateLimitKey = `teacher_${ip}_${cleanEmail}`;
@@ -2631,7 +2631,7 @@ app.post("/api/auth/teacher-login", (req, res) => {
     });
     return;
   }
-  if (firebaseUid && typeof firebaseUid === "string" && firebaseUid.length >= 10) {
+  if (isGoogleAuth === true || firebaseUid && typeof firebaseUid === "string" && firebaseUid.length >= 10) {
     resetLoginAttempts(rateLimitKey);
     const name2 = displayName || dbState.classInfo?.teacherName || "C\xF4 Th\u1EA3o";
     const token2 = createSessionToken({

@@ -30,6 +30,7 @@ export const api = {
     password?: string;
     firebaseUid?: string;
     displayName?: string;
+    isGoogleAuth?: boolean;
   }): Promise<{ token: string; user: { id: string; email: string; name: string; role: 'teacher' } }> {
     const res = await fetch('/api/auth/teacher-login', {
       method: 'POST',

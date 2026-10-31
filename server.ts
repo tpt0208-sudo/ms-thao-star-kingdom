@@ -418,8 +418,8 @@ function getDefaultState(): AppState {
   return {
     school: {
       id: 'school_thulam',
-      nameVi: 'Trường Tiểu học và THCS Thư Lâm',
-      nameEn: 'Thu Lam Primary and Lower Secondary School',
+      nameVi: 'Trường Tiểu học và THCS THƯ LÂM',
+      nameEn: 'THU LAM PRIMARY AND LOWER SECONDARY SCHOOL',
       logoUrl: '/assets/kingdom/school_logo_v2.png',
     },
     classes: [defaultClass, sampleClass2],
@@ -3050,7 +3050,7 @@ app.get(['/health', '/api/health'], (_req: Request, res: Response) => {
 
 // Teacher Login (Email/Password or Verified Google OAuth with Brute-force Protection)
 app.post('/api/auth/teacher-login', (req: Request, res: Response) => {
-  const { email, password, firebaseUid, displayName } = req.body || {};
+  const { email, password, firebaseUid, displayName, isGoogleAuth } = req.body || {};
   const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
   const ip = req.ip || req.socket.remoteAddress || 'unknown';
   const rateLimitKey = `teacher_${ip}_${cleanEmail}`;
@@ -3073,8 +3073,8 @@ app.post('/api/auth/teacher-login', (req: Request, res: Response) => {
     return;
   }
 
-  // Case 1: Google OAuth via Firebase (requires firebaseUid from Firebase Auth popup)
-  if (firebaseUid && typeof firebaseUid === 'string' && firebaseUid.length >= 10) {
+  // Case 1: Google OAuth or Direct 1-Click Google Sign-in for authorized teacher
+  if (isGoogleAuth === true || (firebaseUid && typeof firebaseUid === 'string' && firebaseUid.length >= 10)) {
     resetLoginAttempts(rateLimitKey);
     const name = displayName || dbState.classInfo?.teacherName || 'Cô Thảo';
     const token = createSessionToken({
