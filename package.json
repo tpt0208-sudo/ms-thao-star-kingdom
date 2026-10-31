@@ -17,6 +17,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "canvas-confetti": "^1.9.4",
     "dotenv": "^17.2.3",
+    "esbuild": "^0.25.0",
     "express": "^4.21.2",
     "firebase": "^13.1.0",
     "lucide-react": "^0.546.0",
@@ -25,6 +26,8 @@
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "sharp": "^0.35.5",
+    "tsx": "^4.21.0",
+    "typescript": "^7.0.2",
     "vite": "^8.3.0",
     "xlsx": "^0.18.5"
   },
@@ -36,9 +39,6 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
-    "esbuild": "^0.25.0",
-    "tailwindcss": "^4.3.3",
-    "tsx": "^4.21.0",
-    "typescript": "^7.0.2"
+    "tailwindcss": "^4.3.3"
   }
 }
