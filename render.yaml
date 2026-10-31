@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: ms-thao-star-kingdom
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: TEACHER_EMAILS
+        value: tpt0208@gmail.com,cothao@gmail.com,admin@starkingdom.edu.vn
+      - key: TEACHER_PASSWORD
+        value: Thao2A5@2026
+      - key: USE_DEMO_DATA
+        value: "false"
