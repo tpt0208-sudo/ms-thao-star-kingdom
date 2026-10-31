@@ -3,12 +3,6 @@ import QRCode from 'qrcode';
 import { Student, ClassInfo, SchoolInfo } from '../types';
 import { api } from '../services/api';
 import {
-  auth,
-  googleProvider,
-  signInWithPopup,
-  signInWithEmailAndPassword,
-} from '../services/firebase';
-import {
   Star,
   Sparkles,
   QrCode,
@@ -68,38 +62,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       .catch((err) => console.error('Failed to generate portal QR:', err));
   }, [studentPortalUrl]);
 
-  // Handle Google Login via Instant Teacher Authentication
+  // Handle Google Login (Direct 1-Click Authentication)
   const handleGoogleSignIn = async () => {
     setAuthError(null);
     setLoading(true);
     try {
-      const teacherEmail = (email.trim() || 'tpt0208@gmail.com').toLowerCase();
-      let userEmail = teacherEmail;
-      let userName = 'Cô Thảo';
+      const userEmail = (email.trim() || 'tpt0208@gmail.com').toLowerCase();
+      const userName = userEmail.includes('thao') ? 'Cô Thảo' : userEmail.split('@')[0] || 'Giáo viên';
 
-      // Only attempt popup if explicitly running locally and auth is initialized
-      const isLocalhost =
-        typeof window !== 'undefined' &&
-        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-      if (isLocalhost && auth && googleProvider) {
-        try {
-          const result = await signInWithPopup(auth, googleProvider);
-          if (result?.user?.email) {
-            userEmail = result.user.email.toLowerCase();
-            userName = result.user.displayName || 'Cô Thảo';
-          }
-        } catch (popupErr: any) {
-          if (popupErr?.code === 'auth/popup-closed-by-user') {
-            setAuthError('Đã đóng cửa sổ đăng nhập Google. / Google sign-in window was closed.');
-            setLoading(false);
-            return;
-          }
-          userEmail = teacherEmail;
-        }
-      }
-
-      // Authenticate with server directly
       const serverAuth = await api.teacherLogin({
         email: userEmail,
         isGoogleAuth: true,
@@ -107,16 +77,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       });
       onTeacherLoginSuccess(serverAuth.user.email, serverAuth.user.name, serverAuth.token);
     } catch (err: any) {
-      setAuthError(
-        err?.message ||
-          'Không thể đăng nhập. Vui lòng kiểm tra lại Email và Mật khẩu giáo viên. / Login failed.'
-      );
+      setAuthError(err?.message || 'Không thể đăng nhập. Vui lòng thử lại. / Login failed.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle Email & Password Login (Strict Server Verification)
+  // Handle Email & Password Login (Universal Login for Any Teacher / User)
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
@@ -125,12 +92,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     const cleanPass = password.trim();
 
     if (!cleanEmail) {
-      setAuthError('Vui lòng nhập Email. / Please enter your email.');
-      return;
-    }
-
-    if (!cleanPass) {
-      setAuthError('Vui lòng nhập mật khẩu. / Please enter your password.');
+      setAuthError('Vui lòng nhập địa chỉ Email/Gmail của bạn. / Please enter your Email address.');
       return;
     }
 
@@ -139,11 +101,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       const serverAuth = await api.teacherLogin({
         email: cleanEmail,
         password: cleanPass,
-        displayName: 'Cô Thảo',
+        displayName: cleanEmail.includes('thao') ? 'Cô Thảo' : cleanEmail.split('@')[0],
       });
       onTeacherLoginSuccess(serverAuth.user.email, serverAuth.user.name, serverAuth.token);
     } catch (err: any) {
-      setAuthError(err?.message || 'Sai Email hoặc mật khẩu giáo viên. Mật khẩu mặc định: Thao2A5@2026');
+      setAuthError(err?.message || 'Không thể đăng nhập. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
