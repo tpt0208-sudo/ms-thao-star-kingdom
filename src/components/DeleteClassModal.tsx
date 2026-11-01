@@ -29,18 +29,24 @@ export const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
   onConfirmArchive,
   onConfirmPermanentDelete,
 }) => {
-  const [deleteMode, setDeleteMode] = useState<'archive' | 'permanent'>('archive');
+  const [deleteMode, setDeleteMode] = useState<'archive' | 'permanent'>('permanent');
   const [confirmName, setConfirmName] = useState('');
+  const [isConfirmed, setIsConfirmed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isOnlyClass = totalClassesCount <= 1;
-  const isNameMatched = confirmName.trim().toLowerCase() === classInfo.nameVi.trim().toLowerCase();
+  const isNameMatched =
+    isConfirmed ||
+    confirmName.trim().toLowerCase() === classInfo.nameVi.trim().toLowerCase() ||
+    confirmName.trim().toUpperCase() === 'XOA' ||
+    confirmName.trim().toUpperCase() === 'DELETE' ||
+    confirmName.trim() === classInfo.nameVi;
 
   const handleAction = async () => {
     setError(null);
-    if (isOnlyClass) {
-      setError('Không thể xóa hoặc lưu kho lớp duy nhất trong vương quốc. Vui lòng tạo thêm một lớp mới trước!');
+    if (deleteMode === 'archive' && isOnlyClass) {
+      setError('Không thể lưu kho lớp duy nhất đang hoạt động. Vui lòng tạo thêm một lớp mới trước!');
       return;
     }
 
@@ -52,11 +58,11 @@ export const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
         onClose();
       } else {
         if (!isNameMatched) {
-          setError(`Tên xác nhận không khớp. Vui lòng nhập chính xác "${classInfo.nameVi}"`);
+          setError(`Vui lòng tích chọn xác nhận hoặc nhập tên lớp để xóa.`);
           setLoading(false);
           return;
         }
-        await onConfirmPermanentDelete(classInfo.id, confirmName.trim());
+        await onConfirmPermanentDelete(classInfo.id, confirmName.trim() || classInfo.nameVi);
         playStarSound('click');
         onClose();
       }
@@ -120,9 +126,9 @@ export const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
           <div className="p-3.5 mb-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold flex items-start gap-2.5">
             <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <p className="font-black text-amber-950 mb-0.5">Không thể xóa lớp này</p>
+              <p className="font-black text-amber-950 mb-0.5">Lớp duy nhất trong hệ thống</p>
               <p>
-                Đây là lớp học duy nhất đang có trong hệ thống Vương quốc. Bạn cần bấm <b>"+ Tạo lớp mới"</b> trước nếu muốn xóa hoặc thay thế lớp này.
+                Đây là lớp học duy nhất đang có. Nếu bạn xóa lớp này, hệ thống sẽ tự động làm mới và tạo một <b>"Lớp học mới"</b> để bạn tiếp tục sử dụng mà không bao giờ bị gián đoạn.
               </p>
             </div>
           </div>
@@ -187,18 +193,39 @@ export const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
                 Xóa sạch hoàn toàn lớp học này cùng tất cả học sinh, 4 tổ thi đua, điểm số, lịch sử điểm danh và tin tức liên quan. <b>Hành động này không thể hoàn tác!</b>
               </p>
 
-              {deleteMode === 'permanent' && !isOnlyClass && (
-                <div className="mt-3 pt-3 border-t border-rose-200/70 space-y-2 animate-fade-in">
-                  <p className="text-[11px] font-black text-rose-900">
-                    Để xác nhận, vui lòng nhập chính xác tên lớp: <span className="underline font-extrabold">{classInfo.nameVi}</span>
-                  </p>
+              {deleteMode === 'permanent' && (
+                <div className="mt-3 pt-3 border-t border-rose-200/70 space-y-2.5 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-black text-rose-900">
+                      Xác nhận xóa: <span className="underline font-extrabold">{classInfo.nameVi}</span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirmName(classInfo.nameVi);
+                        setIsConfirmed(true);
+                      }}
+                      className="text-[11px] font-bold text-sky-600 hover:text-sky-800 underline cursor-pointer"
+                    >
+                      Điền nhanh tên lớp
+                    </button>
+                  </div>
                   <input
                     type="text"
                     value={confirmName}
                     onChange={(e) => setConfirmName(e.target.value)}
-                    placeholder={`Nhập đúng "${classInfo.nameVi}" để mở nút xóa`}
+                    placeholder={`Nhập "${classInfo.nameVi}" hoặc "XOA"`}
                     className="w-full px-3 py-2 rounded-xl bg-white border border-rose-300 text-xs font-bold text-slate-800 focus:outline-none focus:border-rose-500"
                   />
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-rose-950 pt-1">
+                    <input
+                      type="checkbox"
+                      checked={isConfirmed}
+                      onChange={(e) => setIsConfirmed(e.target.checked)}
+                      className="w-4 h-4 rounded text-rose-600 accent-rose-600 cursor-pointer"
+                    />
+                    <span>Tôi đã kiểm tra kỹ và chắc chắn muốn xóa lớp này</span>
+                  </label>
                 </div>
               )}
             </div>
@@ -237,7 +264,7 @@ export const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
             <button
               type="button"
               onClick={handleAction}
-              disabled={loading || isOnlyClass || !isNameMatched}
+              disabled={loading || !isNameMatched}
               className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-md flex items-center gap-1.5 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Trash2 className="w-4 h-4" />

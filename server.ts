@@ -22,6 +22,9 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
 
+const serverInstanceId = `inst_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+let isServerColdStart = true;
+
 // Static serving for uploaded media & documents with 7-day browser caching
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d', immutable: true }));
 
@@ -833,6 +836,7 @@ function saveDb(state: AppState) {
     fs.writeFileSync(tmpPath, raw, 'utf-8');
     fs.renameSync(tmpPath, DB_FILE);
     lastSavedTimestamp = new Date().toISOString();
+    isServerColdStart = false;
 
     // Auto-snapshot every 15 minutes or when data changes
     const now = Date.now();
@@ -1116,7 +1120,14 @@ app.get('/api/state', (req: Request, res: Response) => {
     dbState.notificationReads = [];
   }
   const session = extractSession(req);
-  res.json({ success: true, data: sanitizeAppState(dbState, session) });
+  res.json({
+    success: true,
+    data: {
+      ...sanitizeAppState(dbState, session),
+      _serverIsColdStart: isServerColdStart,
+      _serverInstanceId: serverInstanceId,
+    },
+  });
 });
 
 // Notifications: Get list with user read states & unread count
@@ -1474,19 +1485,54 @@ app.delete('/api/classes/:id', (req: Request, res: Response) => {
     return;
   }
 
-  // Prevent deleting if it's the only class in the kingdom
-  if (dbState.classes.length <= 1) {
-    res.status(400).json({ success: false, error: 'Không thể xóa lớp duy nhất trong vương quốc. Hãy tạo thêm một lớp mới trước!' });
-    return;
-  }
-
-  if (confirmClassName && confirmClassName.trim().toLowerCase() !== target.nameVi.trim().toLowerCase()) {
-    res.status(400).json({ success: false, error: `Tên lớp xác nhận không khớp. Vui lòng nhập chính xác "${target.nameVi}"` });
-    return;
+  // Flexible confirmation match
+  if (confirmClassName && typeof confirmClassName === 'string' && confirmClassName.trim()) {
+    const cleanConfirm = confirmClassName.trim().toLowerCase();
+    const cleanTarget = target.nameVi.trim().toLowerCase();
+    const isMatch = cleanConfirm === cleanTarget || cleanTarget.includes(cleanConfirm) || cleanConfirm === 'xoa' || cleanConfirm === 'delete' || cleanConfirm === target.id;
+    if (!isMatch) {
+      res.status(400).json({ success: false, error: `Tên lớp xác nhận không khớp. Vui lòng nhập "${target.nameVi}"` });
+      return;
+    }
   }
 
   if (permanent) {
     // 1. Permanent deletion: remove class and all associated data
+    if (dbState.classes.length <= 1) {
+      // Deleting the last class: cleanly reinitialize with a fresh active class so user is never locked out
+      const newClassId = `class_${Date.now()}`;
+      const freshClass: ClassInfo = {
+        id: newClassId,
+        nameVi: 'Lớp học mới',
+        nameEn: 'New Classroom',
+        grade: 1,
+        schoolYear: '2026 - 2027',
+        teacherName: target.teacherName || 'Cô Thảo',
+        teacherTitleEn: target.teacherTitleEn || 'Ms. Thao',
+        sloganVi: 'Mỗi ngày vui học – Mỗi ngày tỏa sáng!',
+        sloganEn: 'Learn Happy, Shine Bright Every Day!',
+        coverUrl: '/assets/kingdom/hero_banner_v2.png',
+        targetSize: 30,
+      };
+      const freshTeams: Team[] = [
+        { id: `${newClassId}_team_1`, classId: newClassId, nameVi: 'Tổ 1: Ngôi Sao Đỏ', nameEn: 'Team 1: Red Stars', color: '#EF4444', bgColor: '#FEF2F2', borderColor: '#FCA5A5', flagColor: 'red', mascot: 'Lửa Nhiệt Huyết', points: 0, weeklyPoints: 0, monthlyPoints: 0, semester1Points: 0, semester2Points: 0 },
+        { id: `${newClassId}_team_2`, classId: newClassId, nameVi: 'Tổ 2: Ngôi Sao Xanh Dương', nameEn: 'Team 2: Blue Stars', color: '#3B82F6', bgColor: '#EFF6FF', borderColor: '#93C5FD', flagColor: 'blue', mascot: 'Đại Dương Bao La', points: 0, weeklyPoints: 0, monthlyPoints: 0, semester1Points: 0, semester2Points: 0 },
+        { id: `${newClassId}_team_3`, classId: newClassId, nameVi: 'Tổ 3: Ngôi Sao Vàng', nameEn: 'Team 3: Yellow Stars', color: '#F59E0B', bgColor: '#FFFBEB', borderColor: '#FCD34D', flagColor: 'yellow', mascot: 'Ánh Dương Tỏa Sáng', points: 0, weeklyPoints: 0, monthlyPoints: 0, semester1Points: 0, semester2Points: 0 },
+        { id: `${newClassId}_team_4`, classId: newClassId, nameVi: 'Tổ 4: Ngôi Sao Xanh Lá', nameEn: 'Team 4: Green Stars', color: '#10B981', bgColor: '#ECFDF5', borderColor: '#6EE7B7', flagColor: 'green', mascot: 'Mầm Sống Hy Vọng', points: 0, weeklyPoints: 0, monthlyPoints: 0, semester1Points: 0, semester2Points: 0 },
+      ];
+      dbState.classes = [freshClass];
+      dbState.currentClassId = newClassId;
+      dbState.classInfo = freshClass;
+      dbState.students = dbState.students.filter(s => s.classId !== id);
+      dbState.teams = freshTeams;
+      dbState.starTransactions = dbState.starTransactions.filter(tx => tx.classId !== id);
+      dbState.news = dbState.news.filter(n => n.classId !== id);
+      saveDb(dbState);
+      recordAuditLog(newClassId, 'student_delete', target.teacherName, `Xóa lớp ${target.nameVi} và khởi tạo lớp học mới`);
+      res.json({ success: true, message: `Đã xóa lớp ${target.nameVi} và khởi tạo lớp học mới sẵn sàng`, data: dbState });
+      return;
+    }
+
     dbState.classes = dbState.classes.filter(c => c.id !== id);
     dbState.students = dbState.students.filter(s => s.classId !== id);
     dbState.teams = dbState.teams.filter(t => t.classId !== id);

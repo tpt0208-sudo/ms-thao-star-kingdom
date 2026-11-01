@@ -1234,63 +1234,6 @@ export const ClassTeamsView: React.FC<ClassTeamsViewProps> = ({
         </div>
       )}
 
-      {/* Safe Delete Class Modal */}
-      {classToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-2xs animate-fade-in">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-rose-200">
-            <div className="flex items-center gap-2 text-rose-600 mb-2">
-              <ShieldAlert className="w-5 h-5" />
-              <h3 className="text-base font-black">Xác nhận xóa lớp an toàn</h3>
-            </div>
-
-            <p className="text-xs text-slate-600 mb-3">
-              Bạn đang thực hiện xóa lớp <b>"{classToDelete.nameVi}"</b> ({classToDelete.schoolYear}).
-            </p>
-
-            <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 font-semibold mb-3 leading-relaxed">
-              ⭐ <b>Bảo toàn lịch sử:</b> Lớp sẽ được đánh dấu lưu kho ẩn để tránh rủi ro mất mát dữ liệu. Mọi điểm sao và lịch sử vinh danh của học sinh luôn được giữ nguyên an toàn.
-            </div>
-
-            <div className="mb-3">
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Để xác nhận, vui lòng gõ lại chính xác tên lớp: <span className="text-rose-600 font-black">{classToDelete.nameVi}</span>
-              </label>
-              <input
-                type="text"
-                placeholder={classToDelete.nameVi}
-                value={deleteInputName}
-                onChange={(e) => {
-                  setDeleteInputName(e.target.value);
-                  setDeleteError(null);
-                }}
-                className="w-full px-3 py-2 text-xs font-bold rounded-xl border border-rose-200 bg-rose-50/30"
-              />
-            </div>
-
-            {deleteError && (
-              <p className="text-xs text-rose-600 font-bold mb-3">{deleteError}</p>
-            )}
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setClassToDelete(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 cursor-pointer"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmSafeDelete}
-                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-xs cursor-pointer"
-              >
-                Xác nhận xóa lớp
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Academic Year Transition Wizard Modal */}
       {transitionModalClass && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-2xs animate-fade-in">

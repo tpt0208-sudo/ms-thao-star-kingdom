@@ -14,6 +14,8 @@ var BACKUP_DIR = path.resolve(DATA_DIR, "backups");
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+var serverInstanceId = `inst_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+var isServerColdStart = true;
 app.use("/uploads", express.static(UPLOAD_DIR, { maxAge: "7d", immutable: true }));
 app.post("/api/upload/stream", (req, res) => {
   const origName = decodeURIComponent(req.headers["x-file-name"] || `upload_${Date.now()}`);
@@ -750,6 +752,7 @@ function saveDb(state) {
     fs.writeFileSync(tmpPath, raw, "utf-8");
     fs.renameSync(tmpPath, DB_FILE);
     lastSavedTimestamp = (/* @__PURE__ */ new Date()).toISOString();
+    isServerColdStart = false;
     const now = Date.now();
     if (now - lastSnapshotTime > 15 * 60 * 1e3) {
       lastSnapshotTime = now;
@@ -990,7 +993,14 @@ app.get("/api/state", (req, res) => {
     dbState.notificationReads = [];
   }
   const session = extractSession(req);
-  res.json({ success: true, data: sanitizeAppState(dbState, session) });
+  res.json({
+    success: true,
+    data: {
+      ...sanitizeAppState(dbState, session),
+      _serverIsColdStart: isServerColdStart,
+      _serverInstanceId: serverInstanceId
+    }
+  });
 });
 app.get("/api/notifications", (req, res) => {
   const classId = req.query.classId || dbState.currentClassId;
@@ -1289,15 +1299,49 @@ app.delete("/api/classes/:id", (req, res) => {
     res.status(404).json({ success: false, error: "Kh\xF4ng t\xECm th\u1EA5y l\u1EDBp h\u1ECDc" });
     return;
   }
-  if (dbState.classes.length <= 1) {
-    res.status(400).json({ success: false, error: "Kh\xF4ng th\u1EC3 x\xF3a l\u1EDBp duy nh\u1EA5t trong v\u01B0\u01A1ng qu\u1ED1c. H\xE3y t\u1EA1o th\xEAm m\u1ED9t l\u1EDBp m\u1EDBi tr\u01B0\u1EDBc!" });
-    return;
-  }
-  if (confirmClassName && confirmClassName.trim().toLowerCase() !== target.nameVi.trim().toLowerCase()) {
-    res.status(400).json({ success: false, error: `T\xEAn l\u1EDBp x\xE1c nh\u1EADn kh\xF4ng kh\u1EDBp. Vui l\xF2ng nh\u1EADp ch\xEDnh x\xE1c "${target.nameVi}"` });
-    return;
+  if (confirmClassName && typeof confirmClassName === "string" && confirmClassName.trim()) {
+    const cleanConfirm = confirmClassName.trim().toLowerCase();
+    const cleanTarget = target.nameVi.trim().toLowerCase();
+    const isMatch = cleanConfirm === cleanTarget || cleanTarget.includes(cleanConfirm) || cleanConfirm === "xoa" || cleanConfirm === "delete" || cleanConfirm === target.id;
+    if (!isMatch) {
+      res.status(400).json({ success: false, error: `T\xEAn l\u1EDBp x\xE1c nh\u1EADn kh\xF4ng kh\u1EDBp. Vui l\xF2ng nh\u1EADp "${target.nameVi}"` });
+      return;
+    }
   }
   if (permanent) {
+    if (dbState.classes.length <= 1) {
+      const newClassId = `class_${Date.now()}`;
+      const freshClass = {
+        id: newClassId,
+        nameVi: "L\u1EDBp h\u1ECDc m\u1EDBi",
+        nameEn: "New Classroom",
+        grade: 1,
+        schoolYear: "2026 - 2027",
+        teacherName: target.teacherName || "C\xF4 Th\u1EA3o",
+        teacherTitleEn: target.teacherTitleEn || "Ms. Thao",
+        sloganVi: "M\u1ED7i ng\xE0y vui h\u1ECDc \u2013 M\u1ED7i ng\xE0y t\u1ECFa s\xE1ng!",
+        sloganEn: "Learn Happy, Shine Bright Every Day!",
+        coverUrl: "/assets/kingdom/hero_banner_v2.png",
+        targetSize: 30
+      };
+      const freshTeams = [
+        { id: `${newClassId}_team_1`, classId: newClassId, nameVi: "T\u1ED5 1: Ng\xF4i Sao \u0110\u1ECF", nameEn: "Team 1: Red Stars", color: "#EF4444", bgColor: "#FEF2F2", borderColor: "#FCA5A5", flagColor: "red", mascot: "L\u1EEDa Nhi\u1EC7t Huy\u1EBFt", points: 0, weeklyPoints: 0, monthlyPoints: 0, semester1Points: 0, semester2Points: 0 },
+        { id: `${newClassId}_team_2`, classId: newClassId, nameVi: "T\u1ED5 2: Ng\xF4i Sao Xanh D\u01B0\u01A1ng", nameEn: "Team 2: Blue Stars", color: "#3B82F6", bgColor: "#EFF6FF", borderColor: "#93C5FD", flagColor: "blue", mascot: "\u0110\u1EA1i D\u01B0\u01A1ng Bao La", points: 0, weeklyPoints: 0, monthlyPoints: 0, semester1Points: 0, semester2Points: 0 },
+        { id: `${newClassId}_team_3`, classId: newClassId, nameVi: "T\u1ED5 3: Ng\xF4i Sao V\xE0ng", nameEn: "Team 3: Yellow Stars", color: "#F59E0B", bgColor: "#FFFBEB", borderColor: "#FCD34D", flagColor: "yellow", mascot: "\xC1nh D\u01B0\u01A1ng T\u1ECFa S\xE1ng", points: 0, weeklyPoints: 0, monthlyPoints: 0, semester1Points: 0, semester2Points: 0 },
+        { id: `${newClassId}_team_4`, classId: newClassId, nameVi: "T\u1ED5 4: Ng\xF4i Sao Xanh L\xE1", nameEn: "Team 4: Green Stars", color: "#10B981", bgColor: "#ECFDF5", borderColor: "#6EE7B7", flagColor: "green", mascot: "M\u1EA7m S\u1ED1ng Hy V\u1ECDng", points: 0, weeklyPoints: 0, monthlyPoints: 0, semester1Points: 0, semester2Points: 0 }
+      ];
+      dbState.classes = [freshClass];
+      dbState.currentClassId = newClassId;
+      dbState.classInfo = freshClass;
+      dbState.students = dbState.students.filter((s) => s.classId !== id);
+      dbState.teams = freshTeams;
+      dbState.starTransactions = dbState.starTransactions.filter((tx) => tx.classId !== id);
+      dbState.news = dbState.news.filter((n) => n.classId !== id);
+      saveDb(dbState);
+      recordAuditLog(newClassId, "student_delete", target.teacherName, `X\xF3a l\u1EDBp ${target.nameVi} v\xE0 kh\u1EDFi t\u1EA1o l\u1EDBp h\u1ECDc m\u1EDBi`);
+      res.json({ success: true, message: `\u0110\xE3 x\xF3a l\u1EDBp ${target.nameVi} v\xE0 kh\u1EDFi t\u1EA1o l\u1EDBp h\u1ECDc m\u1EDBi s\u1EB5n s\xE0ng`, data: dbState });
+      return;
+    }
     dbState.classes = dbState.classes.filter((c) => c.id !== id);
     dbState.students = dbState.students.filter((s) => s.classId !== id);
     dbState.teams = dbState.teams.filter((t) => t.classId !== id);

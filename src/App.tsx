@@ -237,10 +237,12 @@ export default function App() {
       let data = await api.getState();
 
       // 3. Render Ephemeral Cold-Start Detection & Self-Healing:
-      // If server restarted and returned a default or smaller dataset while local durable storage has more data,
-      // automatically hydrate server state from client so teacher never loses a single class, student, or resource.
+      // Only re-hydrate if the server is in true cold-start mode (fresh container boot)
+      // and client durable storage has more data, preventing intentional user deletions from being resurrected.
       const dState = localDurable?.state;
+      const isColdStart = (data as any)?._serverIsColdStart === true;
       if (
+        isColdStart &&
         dState &&
         currentUserInfo &&
         (
@@ -249,7 +251,7 @@ export default function App() {
           (Array.isArray(dState.learningResources) && Array.isArray(data.learningResources) && dState.learningResources.length > data.learningResources.length)
         )
       ) {
-        console.warn('⚡ Detected server restart with older dataset. Re-hydrating server state from persistent local storage...');
+        console.warn('⚡ Detected fresh server cold-start. Re-hydrating server state from persistent local storage...');
         try {
           const hydratedRes = await api.hydrateServerFromClient(dState);
           if (hydratedRes && hydratedRes.success && hydratedRes.data) {
@@ -476,6 +478,26 @@ export default function App() {
     try {
       setLoading(true);
       await api.deleteClass(classId, confirmName, permanent);
+
+      // Immediately purge deleted class and its students from local durable storage to avoid resurrection
+      const currentDurable = await durableStorage.getState();
+      if (currentDurable?.state) {
+        const remainingClasses = currentDurable.state.classes.filter((c) => c.id !== classId);
+        const remainingStudents = currentDurable.state.students.filter((s) => s.classId !== classId);
+        const nextClassId = currentDurable.state.currentClassId === classId ? remainingClasses[0]?.id || '' : currentDurable.state.currentClassId;
+        const nextClassInfo = remainingClasses.find((c) => c.id === nextClassId) || remainingClasses[0] || currentDurable.state.classInfo;
+        const updatedState = {
+          ...currentDurable.state,
+          classes: remainingClasses,
+          students: remainingStudents,
+          currentClassId: nextClassId,
+          classInfo: nextClassInfo,
+        };
+        await durableStorage.saveState(updatedState);
+        offlineSync.cacheClassState(updatedState);
+        setAppState(updatedState);
+      }
+
       await fetchState();
       playStarSound('click');
     } catch (err) {
