@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AppState, Role, Student, LibraryCategory, StarTransaction, ClassInfo, AppNotification } from './types';
 import { api } from './services/api';
 import { offlineSync } from './services/offlineSync';
+import { durableStorage } from './services/durableStorage';
 import { Header } from './components/Header';
 import { Sidebar, NavTab, navItems, settingsItem } from './components/Sidebar';
 import { HeroBanner } from './components/HeroBanner';
@@ -221,22 +222,63 @@ export default function App() {
   const fetchState = async (silent?: boolean | unknown) => {
     const isSilent = typeof silent === 'boolean' ? silent : true;
     try {
-      if (!isSilent) {
+      if (!isSilent && !appState) {
         setLoading(true);
       }
-      const data = await api.getState();
+
+      // 1. Fast path: Immediate load from durable local storage for 0ms initial render
+      const localDurable = await durableStorage.getState();
+      if (localDurable && localDurable.state && !appState) {
+        setAppState(localDurable.state);
+        setLoading(false);
+      }
+
+      // 2. Fetch authoritative state from server
+      let data = await api.getState();
+
+      // 3. Render Ephemeral Cold-Start Detection & Self-Healing:
+      // If server restarted and returned a default or smaller dataset while local durable storage has more data,
+      // automatically hydrate server state from client so teacher never loses a single class, student, or resource.
+      const dState = localDurable?.state;
+      if (
+        dState &&
+        currentUserInfo &&
+        (
+          (Array.isArray(dState.classes) && Array.isArray(data.classes) && dState.classes.length > data.classes.length) ||
+          (Array.isArray(dState.students) && Array.isArray(data.students) && dState.students.length > data.students.length) ||
+          (Array.isArray(dState.learningResources) && Array.isArray(data.learningResources) && dState.learningResources.length > data.learningResources.length)
+        )
+      ) {
+        console.warn('⚡ Detected server restart with older dataset. Re-hydrating server state from persistent local storage...');
+        try {
+          const hydratedRes = await api.hydrateServerFromClient(dState);
+          if (hydratedRes && hydratedRes.success && hydratedRes.data) {
+            data = hydratedRes.data;
+          }
+        } catch (hErr) {
+          console.debug('Cold-start re-hydration notice:', hErr);
+        }
+      }
+
       setAppState(data);
-      // Cache fresh state for offline use
+      // Persist fresh server state to durable storage and offline caches
       offlineSync.cacheClassState(data);
+      durableStorage.saveState(data);
       setError(null);
     } catch (err: unknown) {
-      console.warn('Network error fetching state, checking offline cache:', err);
-      const cached = offlineSync.getCachedClassState();
-      if (cached && cached.state) {
-        setAppState(cached.state);
+      console.warn('Network error fetching state, checking durable offline storage:', err);
+      const localDurable = await durableStorage.getState();
+      if (localDurable && localDurable.state) {
+        setAppState(localDurable.state);
         setError(null);
       } else {
-        setError(err instanceof Error ? err.message : 'Lỗi khi tải dữ liệu lớp học');
+        const cached = offlineSync.getCachedClassState();
+        if (cached && cached.state) {
+          setAppState(cached.state);
+          setError(null);
+        } else {
+          setError(err instanceof Error ? err.message : 'Lỗi khi tải dữ liệu lớp học');
+        }
       }
     } finally {
       if (!isSilent) {

@@ -649,5 +649,52 @@ export const api = {
     if (!json.success) throw new Error(json.error || 'Lỗi khi tặng sao sinh nhật');
     return json;
   },
+
+  async getSystemHealth(): Promise<{
+    serverStatus: string;
+    uptimeSeconds: number;
+    memoryUsageMB: number;
+    heapUsedMB: number;
+    dbSizeKB: number;
+    recordsCount: {
+      classes: number;
+      students: number;
+      teams: number;
+      news: number;
+      learningResources: number;
+      starTransactions: number;
+    };
+    uploadsCount: number;
+    uploadsTotalSizeMB: number;
+    lastSavedTimestamp: string;
+    snapshotsCount: number;
+  }> {
+    const res = await authFetch('/api/system/health');
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Failed to get system health');
+    return json.health;
+  },
+
+  async hydrateServerFromClient(clientState: AppState): Promise<{ success: boolean; message: string; data: AppState }> {
+    const res = await authFetch('/api/sync/hydrate-from-client', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientState }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Failed to hydrate state');
+    return json;
+  },
+
+  async importCompleteBackup(backupPayload: any): Promise<{ success: boolean; message: string; data: AppState }> {
+    const res = await authFetch('/api/backup/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ backupPayload }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Failed to import backup');
+    return json;
+  },
 };
 

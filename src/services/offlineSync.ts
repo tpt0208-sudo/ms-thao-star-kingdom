@@ -1,4 +1,5 @@
 import { OfflineOperation, AppState } from '../types';
+import { durableStorage } from './durableStorage';
 
 const OFFLINE_QUEUE_KEY = 'star_kingdom_offline_queue';
 const OFFLINE_CACHE_KEY = 'star_kingdom_offline_class_cache';
@@ -12,6 +13,8 @@ class OfflineSyncService {
 
   constructor() {
     this.loadQueue();
+    // Also asynchronously load queue and state from Durable IndexedDB
+    this.initDurableStorage();
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => {
         this.notifyListeners();
@@ -20,6 +23,32 @@ class OfflineSyncService {
       window.addEventListener('offline', () => {
         this.notifyListeners();
       });
+    }
+  }
+
+  private async initDurableStorage() {
+    try {
+      await durableStorage.init();
+      const durableQ = await durableStorage.getQueue();
+      if (durableQ && durableQ.length > 0) {
+        // Merge with existing queue if any pending ops exist
+        const map = new Map<string, OfflineOperation>();
+        this.queue.forEach((op) => map.set(op.id, op));
+        durableQ.forEach((op) => {
+          if (!map.has(op.id)) map.set(op.id, op);
+        });
+        this.queue = Array.from(map.values());
+        this.notifyListeners();
+      }
+      const durableState = await durableStorage.getState();
+      if (durableState && durableState.state && !this.inMemoryCache) {
+        this.inMemoryCache = {
+          timestamp: durableState.timestamp || new Date().toISOString(),
+          state: durableState.state,
+        };
+      }
+    } catch (e) {
+      console.debug('Durable storage init in offlineSync:', e);
     }
   }
 
@@ -43,6 +72,11 @@ class OfflineSyncService {
   }
 
   private saveQueue() {
+    // Save to Durable IndexedDB asynchronously without blocking
+    durableStorage.saveQueue(this.queue).catch((err: unknown) => {
+      console.debug('Failed to save queue to durable storage:', err);
+    });
+
     if (typeof localStorage === 'undefined') {
       this.notifyListeners();
       return;
@@ -61,7 +95,7 @@ class OfflineSyncService {
         try {
           localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(this.queue));
         } catch (_) {
-          console.warn('LocalStorage quota reached while saving queue; queue kept in memory.');
+          console.warn('LocalStorage quota reached while saving queue; queue kept in durable IndexedDB & memory.');
         }
       } else {
         console.debug('Failed to save offline queue:', e);
@@ -223,6 +257,11 @@ class OfflineSyncService {
       timestamp: new Date().toISOString(),
       state,
     };
+
+    // 2. Persist complete unpruned state into Durable IndexedDB (hundreds of MB capacity)
+    durableStorage.saveState(state).catch((err) => {
+      console.debug('Failed to save state to durable storage:', err);
+    });
 
     if (typeof localStorage === 'undefined') {
       return true;

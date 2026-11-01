@@ -9,6 +9,46 @@ var app = express();
 var PORT = Number(process.env.PORT) || 3e3;
 var DATA_DIR = path.resolve(process.cwd(), "data");
 var DB_FILE = process.env.DB_FILE ? path.resolve(process.cwd(), process.env.DB_FILE) : process.env.USE_DEMO_DATA === "true" ? path.resolve(DATA_DIR, "demo_db.json") : path.resolve(DATA_DIR, "db.json");
+var UPLOAD_DIR = path.resolve(DATA_DIR, "uploads");
+var BACKUP_DIR = path.resolve(DATA_DIR, "backups");
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+app.use("/uploads", express.static(UPLOAD_DIR, { maxAge: "7d", immutable: true }));
+app.post("/api/upload/stream", (req, res) => {
+  const origName = decodeURIComponent(req.headers["x-file-name"] || `upload_${Date.now()}`);
+  const mimeType = req.headers["content-type"] || "application/octet-stream";
+  const ext = path.extname(origName) || ".bin";
+  const safeBase = origName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 40);
+  const fileId = `file_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const storedFileName = `${fileId}_${safeBase}${ext}`;
+  const targetPath = path.join(UPLOAD_DIR, storedFileName);
+  const writeStream = fs.createWriteStream(targetPath);
+  let totalBytes = 0;
+  req.on("data", (chunk) => {
+    totalBytes += chunk.length;
+  });
+  req.pipe(writeStream);
+  writeStream.on("finish", () => {
+    const fileUrl = `/uploads/${storedFileName}`;
+    res.json({
+      success: true,
+      file: {
+        id: fileId,
+        fileName: origName,
+        storedName: storedFileName,
+        url: fileUrl,
+        mimeType,
+        size: totalBytes,
+        uploadedAt: (/* @__PURE__ */ new Date()).toISOString()
+      }
+    });
+  });
+  writeStream.on("error", (err) => {
+    console.error("File stream error:", err);
+    res.status(500).json({ success: false, error: "L\u1ED7i ghi t\u1EC7p l\xEAn m\xE1y ch\u1EE7" });
+  });
+});
 var SESSION_SECRET = process.env.SESSION_SECRET || "starkingdom-hmac-secret-key-2026-thulam";
 var DEFAULT_ALLOWED_TEACHER_EMAILS = [
   "tpt0208@gmail.com",
@@ -701,11 +741,43 @@ function loadDb() {
   saveDb(defaultState);
   return defaultState;
 }
+var lastSavedTimestamp = (/* @__PURE__ */ new Date()).toISOString();
+var lastSnapshotTime = 0;
 function saveDb(state) {
   try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(state, null, 2), "utf-8");
+    const tmpPath = `${DB_FILE}.tmp`;
+    const raw = JSON.stringify(state, null, 2);
+    fs.writeFileSync(tmpPath, raw, "utf-8");
+    fs.renameSync(tmpPath, DB_FILE);
+    lastSavedTimestamp = (/* @__PURE__ */ new Date()).toISOString();
+    const now = Date.now();
+    if (now - lastSnapshotTime > 15 * 60 * 1e3) {
+      lastSnapshotTime = now;
+      try {
+        const snapPath = path.join(BACKUP_DIR, `snapshot_${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`);
+        fs.writeFileSync(snapPath, raw, "utf-8");
+      } catch (_) {
+      }
+    }
+    try {
+      const demoPath = path.resolve(DATA_DIR, "demo_db.json");
+      if (fs.existsSync(demoPath)) {
+        const demoBase = JSON.parse(fs.readFileSync(demoPath, "utf-8"));
+        demoBase.school = state.school;
+        demoBase.classInfo = state.classInfo;
+        demoBase.classes = state.classes;
+        demoBase.teams = state.teams;
+        demoBase.students = state.students;
+        demoBase.news = state.news;
+        demoBase.learningResources = state.learningResources;
+        demoBase.levelRules = state.levelRules;
+        demoBase.academicConfig = state.academicConfig;
+        fs.writeFileSync(demoPath, JSON.stringify(demoBase, null, 2), "utf-8");
+      }
+    } catch (_) {
+    }
   } catch (err) {
-    console.error("Error saving DB file:", err);
+    console.error("Error saving DB file atomically:", err);
   }
 }
 var dbState = loadDb();
@@ -2642,6 +2714,133 @@ app.post("/api/restore", (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err instanceof Error ? err.message : "L\u1ED7i khi kh\xF4i ph\u1EE5c" });
   }
+});
+app.post("/api/sync/hydrate-from-client", (req, res) => {
+  const { clientState } = req.body;
+  if (!clientState || !Array.isArray(clientState.students)) {
+    res.status(400).json({ success: false, error: "D\u1EEF li\u1EC7u client kh\xF4ng h\u1EE3p l\u1EC7" });
+    return;
+  }
+  if (!clientState.school || !clientState.classInfo) {
+    res.status(400).json({ success: false, error: "D\u1EEF li\u1EC7u thi\u1EBFu c\u1EA5u tr\xFAc tr\u01B0\u1EDDng/l\u1EDBp" });
+    return;
+  }
+  dbState = {
+    ...clientState,
+    learningResources: Array.isArray(clientState.learningResources) && clientState.learningResources.length > 0 ? clientState.learningResources : dbState.learningResources
+  };
+  saveDb(dbState);
+  console.log(`[Hydration] Successfully hydrated server state from client with ${dbState.students.length} students, ${dbState.news.length} news, ${dbState.learningResources.length} resources.`);
+  res.json({ success: true, message: "\u0110\xE3 kh\xF4i ph\u1EE5c d\u1EEF li\u1EC7u t\u1EEB b\u1ED9 nh\u1EDB b\u1EC1n v\u1EEFng c\u1EE7a b\u1EA1n!", data: dbState });
+});
+app.get("/api/system/health", (_req, res) => {
+  let dbSizeKB = 0;
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      dbSizeKB = Math.round(fs.statSync(DB_FILE).size / 1024 * 10) / 10;
+    }
+  } catch (_) {
+  }
+  let uploadsCount = 0;
+  let uploadsTotalSizeMB = 0;
+  try {
+    if (fs.existsSync(UPLOAD_DIR)) {
+      const files = fs.readdirSync(UPLOAD_DIR);
+      uploadsCount = files.length;
+      let totalBytes = 0;
+      files.forEach((f) => {
+        try {
+          totalBytes += fs.statSync(path.join(UPLOAD_DIR, f)).size;
+        } catch (_) {
+        }
+      });
+      uploadsTotalSizeMB = Math.round(totalBytes / (1024 * 1024) * 10) / 10;
+    }
+  } catch (_) {
+  }
+  let snapshotsCount = 0;
+  try {
+    if (fs.existsSync(BACKUP_DIR)) {
+      snapshotsCount = fs.readdirSync(BACKUP_DIR).filter((f) => f.endsWith(".json")).length;
+    }
+  } catch (_) {
+  }
+  const mem = process.memoryUsage();
+  res.json({
+    success: true,
+    health: {
+      serverStatus: "online",
+      uptimeSeconds: Math.floor(process.uptime()),
+      memoryUsageMB: Math.round(mem.rss / (1024 * 1024) * 10) / 10,
+      heapUsedMB: Math.round(mem.heapUsed / (1024 * 1024) * 10) / 10,
+      dbSizeKB,
+      recordsCount: {
+        classes: dbState.classes?.length || 0,
+        students: dbState.students?.length || 0,
+        teams: dbState.teams?.length || 0,
+        news: dbState.news?.length || 0,
+        learningResources: dbState.learningResources?.length || 0,
+        starTransactions: dbState.starTransactions?.length || 0
+      },
+      uploadsCount,
+      uploadsTotalSizeMB,
+      lastSavedTimestamp,
+      snapshotsCount
+    }
+  });
+});
+app.get("/api/backup/export", (_req, res) => {
+  const exportPayload = {
+    appVersion: "2.9.0",
+    exportedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    school: dbState.school,
+    classes: dbState.classes,
+    currentClassId: dbState.currentClassId,
+    classInfo: dbState.classInfo,
+    teams: dbState.teams,
+    students: dbState.students,
+    starTransactions: dbState.starTransactions,
+    badges: dbState.badges,
+    rewards: dbState.rewards,
+    redemptions: dbState.redemptions,
+    attendance: dbState.attendance,
+    seatingChart: dbState.seatingChart,
+    news: dbState.news,
+    learningResources: dbState.learningResources,
+    levelRules: dbState.levelRules,
+    academicConfig: dbState.academicConfig,
+    finalizedResults: dbState.finalizedResults,
+    auditLogs: dbState.auditLogs,
+    kingdomAvatarUrl: dbState.kingdomAvatarUrl,
+    sidebarMascotUrl: dbState.sidebarMascotUrl
+  };
+  const filename = `MsThao_StarKingdom_Backup_${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`;
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  res.send(JSON.stringify(exportPayload, null, 2));
+});
+app.post("/api/backup/import", (req, res) => {
+  const { backupPayload } = req.body;
+  if (!backupPayload || !Array.isArray(backupPayload.students) || !backupPayload.school) {
+    res.status(400).json({ success: false, error: "T\u1EC7p sao l\u01B0u kh\xF4ng \u0111\xFAng \u0111\u1ECBnh d\u1EA1ng V\u01B0\u01A1ng qu\u1ED1c ng\xF4i sao" });
+    return;
+  }
+  try {
+    const safetySnapshotPath = path.join(BACKUP_DIR, `pre_restore_safety_${Date.now()}.json`);
+    fs.writeFileSync(safetySnapshotPath, JSON.stringify(dbState, null, 2), "utf-8");
+  } catch (_) {
+  }
+  dbState = {
+    ...dbState,
+    ...backupPayload,
+    backups: dbState.backups || []
+  };
+  saveDb(dbState);
+  res.json({
+    success: true,
+    message: `\u0110\xE3 kh\xF4i ph\u1EE5c th\xE0nh c\xF4ng ${dbState.students.length} h\u1ECDc sinh v\xE0 ${dbState.classes.length} l\u1EDBp h\u1ECDc!`,
+    data: dbState
+  });
 });
 app.get(["/health", "/api/health"], (_req, res) => {
   res.json({

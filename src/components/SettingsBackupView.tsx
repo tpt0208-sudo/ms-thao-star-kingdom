@@ -3,6 +3,8 @@ import { SchoolInfo, ClassInfo, LevelRule, Student, Team, MenuItemCustomization,
 import { api } from '../services/api';
 import { audioManager } from '../utils/audioManager';
 import { offlineSync } from '../services/offlineSync';
+import { uploader } from '../services/uploader';
+import { durableStorage, DurableBackupRecord } from '../services/durableStorage';
 import { playStarSound, triggerGrandCelebration, stopCelebration } from '../utils/effects';
 import { navItems, settingsItem, NavTab } from './Sidebar';
 import { MenuIcon } from './MenuIcon';
@@ -218,6 +220,70 @@ export const SettingsBackupView: React.FC<SettingsBackupViewProps> = ({
   } | null>(null);
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
 
+  // Local Snapshots & Server Health
+  const [localSnapshots, setLocalSnapshots] = useState<DurableBackupRecord[]>([]);
+  const [systemHealth, setSystemHealth] = useState<any>(null);
+  const [loadingServerHealth, setLoadingServerHealth] = useState(false);
+
+  const fetchSystemHealth = async () => {
+    try {
+      setLoadingServerHealth(true);
+      const health = await api.getSystemHealth();
+      setSystemHealth(health);
+    } catch (e) {
+      console.debug('Failed to fetch system health:', e);
+    } finally {
+      setLoadingServerHealth(false);
+    }
+  };
+
+  const loadLocalSnapshots = async () => {
+    try {
+      const list = await durableStorage.listLocalSnapshots();
+      setLocalSnapshots(list);
+    } catch (e) {
+      console.debug('Failed to load local snapshots:', e);
+    }
+  };
+
+  const handleCreateLocalSnapshot = async () => {
+    try {
+      setBackupLoading(true);
+      const stateToSave = fullState || (await api.getState());
+      const label = `Bản chụp Lớp ${classInfo.nameVi} (${new Date().toLocaleDateString('vi-VN')} ${new Date().toLocaleTimeString('vi-VN')})`;
+      await durableStorage.createLocalSnapshot(stateToSave, label);
+      await loadLocalSnapshots();
+      playStarSound('star');
+      alert('Đã lưu bản chụp an toàn vào bộ nhớ bền vững IndexedDB của trình duyệt!');
+    } catch (e) {
+      alert('Lỗi khi tạo bản chụp!');
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
+  const handleRestoreLocalSnapshot = async (snap: DurableBackupRecord) => {
+    if (!window.confirm(`Khôi phục toàn bộ dữ liệu từ bản chụp "${snap.label}"?`)) return;
+    try {
+      setBackupLoading(true);
+      await api.hydrateServerFromClient(snap.state);
+      await durableStorage.saveState(snap.state);
+      await onRefreshState();
+      playStarSound('win');
+      alert('Đã khôi phục dữ liệu từ bản chụp thành công!');
+    } catch (e) {
+      alert('Lỗi khi khôi phục bản chụp!');
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
+  const handleDeleteLocalSnapshot = async (id: string) => {
+    if (!window.confirm('Xóa bản chụp này khỏi trình duyệt?')) return;
+    await durableStorage.deleteLocalSnapshot(id);
+    await loadLocalSnapshots();
+  };
+
   // Subscribe to audio and offline changes
   useEffect(() => {
     const unsubAudio = audioManager.subscribe((newSettings) => setAudioSettings(newSettings));
@@ -230,6 +296,13 @@ export const SettingsBackupView: React.FC<SettingsBackupViewProps> = ({
       unsubOffline();
     };
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'backup' || activeTab === 'health') {
+      fetchSystemHealth();
+      loadLocalSnapshots();
+    }
+  }, [activeTab]);
 
   const handleSaveGeneral = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -260,9 +333,18 @@ export const SettingsBackupView: React.FC<SettingsBackupViewProps> = ({
     }
   };
 
-  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    try {
+      const res = await uploader.uploadFile(file, { compressImage: true, maxDimension: 1920, quality: 0.88 });
+      if (res.success && res.url) {
+        setCoverUrl(res.url);
+        return;
+      }
+    } catch (err) {
+      console.debug('Direct stream upload of cover failed, using fallback:', err);
+    }
     const reader = new FileReader();
     reader.onload = (evt) => {
       if (typeof evt.target?.result === 'string') {
@@ -458,12 +540,23 @@ export const SettingsBackupView: React.FC<SettingsBackupViewProps> = ({
 
     try {
       setBackupLoading(true);
-      await api.restoreBackup(restorePreview.raw);
+      if (restorePreview.raw._isCompleteExport || (restorePreview.raw.classes && restorePreview.raw.students)) {
+        await api.importCompleteBackup(restorePreview.raw);
+      } else {
+        await api.restoreBackup(restorePreview.raw);
+      }
+      // Also write directly to Durable IndexedDB
+      try {
+        await durableStorage.saveState(restorePreview.raw);
+      } catch (dErr) {
+        console.debug('Failed to write restored state to durable storage:', dErr);
+      }
       playStarSound('win');
       alert('Phục hồi dữ liệu thành công!');
       setRestorePreview(null);
       setRestoreFile(null);
       await onRefreshState();
+      await loadLocalSnapshots();
     } catch (err) {
       console.error(err);
       alert('Lỗi trong quá trình phục hồi dữ liệu!');
@@ -2366,6 +2459,58 @@ export const SettingsBackupView: React.FC<SettingsBackupViewProps> = ({
       {/* TAB 6: BACKUP & RESTORE */}
       {activeTab === 'backup' && (
         <div className="bg-white rounded-3xl p-6 border border-sky-100 shadow-sm space-y-6">
+          {/* Live Persistence & System Health Card */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-50 via-indigo-50 to-amber-50 border border-sky-200 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-sky-200/60 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <h4 className="text-xs font-black text-[#263C72] uppercase tracking-wider">
+                  Trạng thái lưu trữ bền vững Render & IndexedDB
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={fetchSystemHealth}
+                disabled={loadingServerHealth}
+                className="px-3 py-1 rounded-xl bg-white hover:bg-slate-50 border border-sky-200 text-[11px] font-bold text-sky-800 shadow-xs flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+              >
+                <RefreshCw className={`w-3 h-3 ${loadingServerHealth ? 'animate-spin' : ''}`} />
+                <span>{loadingServerHealth ? 'Đang kiểm tra...' : 'Kiểm tra máy chủ'}</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-bold text-slate-700">
+              <div className="bg-white/80 p-2.5 rounded-xl border border-sky-100">
+                <span className="text-[10px] text-slate-400 font-bold block mb-0.5">Dung lượng Database</span>
+                <span className="text-sm font-black text-sky-900">
+                  {systemHealth ? `${(systemHealth.dbSizeKb || 0).toLocaleString()} KB` : 'Đang tính...'}
+                </span>
+              </div>
+              <div className="bg-white/80 p-2.5 rounded-xl border border-sky-100">
+                <span className="text-[10px] text-slate-400 font-bold block mb-0.5">Kho tệp đã upload</span>
+                <span className="text-sm font-black text-indigo-900">
+                  {systemHealth ? `${systemHealth.uploadsCount || 0} tệp (${((systemHealth.uploadsSizeKb || 0) / 1024).toFixed(1)} MB)` : 'Đang tính...'}
+                </span>
+              </div>
+              <div className="bg-white/80 p-2.5 rounded-xl border border-sky-100">
+                <span className="text-[10px] text-slate-400 font-bold block mb-0.5">Bản chụp tự động</span>
+                <span className="text-sm font-black text-emerald-900">
+                  {systemHealth ? `${systemHealth.snapshotsCount || 0} bản lưu` : 'Đang tính...'}
+                </span>
+              </div>
+              <div className="bg-white/80 p-2.5 rounded-xl border border-sky-100">
+                <span className="text-[10px] text-slate-400 font-bold block mb-0.5">Thời gian hoạt động</span>
+                <span className="text-sm font-black text-slate-800">
+                  {systemHealth ? `${Math.floor((systemHealth.uptimeSeconds || 0) / 60)} phút` : 'Đang tính...'}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-600 font-semibold leading-relaxed">
+              🛡️ <b>Cơ chế bảo vệ dữ liệu vĩnh viễn:</b> Toàn bộ thao tác thêm học sinh, cộng sao và tạo học liệu được lưu song song vào tệp máy chủ (ghi nguyên tử atomic write) và cơ sở dữ liệu IndexedDB trên thiết bị giáo viên. Ngay cả khi Render ngủ đông hoặc khởi động lại container, hệ thống tự động nhận diện và khôi phục dữ liệu nguyên vẹn 100%.
+            </p>
+          </div>
+
           {/* Export Section */}
           <div>
             <h3 className="text-sm font-black text-[#263C72] flex items-center gap-2 mb-1">
@@ -2392,7 +2537,78 @@ export const SettingsBackupView: React.FC<SettingsBackupViewProps> = ({
                 <Database className="w-4 h-4" />
                 <span>Tải toàn bộ Vương quốc ({classes.length} lớp) (.json)</span>
               </button>
+              <button
+                onClick={() => window.open('/api/backup/export', '_blank')}
+                className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md flex items-center gap-2 cursor-pointer transition"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Xuất bản sao lưu toàn hệ thống (.json)</span>
+              </button>
             </div>
+          </div>
+
+          <hr className="border-slate-100" />
+
+          {/* IndexedDB Local Snapshots Section */}
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+              <div>
+                <h3 className="text-sm font-black text-[#263C72] flex items-center gap-2">
+                  <Archive className="w-4 h-4 text-amber-600" />
+                  <span>Bản chụp dữ liệu cục bộ trên máy (Local Snapshots)</span>
+                </h3>
+                <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                  Lưu trữ vĩnh viễn trên trình duyệt bằng IndexedDB (dung lượng lên đến hàng trăm MB), hoàn toàn độc lập với Render.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleCreateLocalSnapshot}
+                disabled={backupLoading}
+                className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black shadow-xs flex items-center gap-1.5 cursor-pointer transition shrink-0 disabled:opacity-50"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>Tạo bản chụp ngay</span>
+              </button>
+            </div>
+
+            {localSnapshots.length === 0 ? (
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs font-semibold text-slate-500">
+                Chưa có bản chụp cục bộ nào trên trình duyệt này. Nhấn "Tạo bản chụp ngay" để sao lưu an toàn chỉ với 1 cú click!
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {localSnapshots.map((snap) => (
+                  <div key={snap.id} className="p-3 rounded-2xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition">
+                    <div>
+                      <h5 className="text-xs font-black text-slate-800">{snap.label}</h5>
+                      <span className="text-[11px] font-semibold text-slate-500">
+                        {new Date(snap.timestamp).toLocaleString('vi-VN')} • {snap.classCount} lớp • {snap.studentCount} học sinh
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => handleRestoreLocalSnapshot(snap)}
+                        disabled={backupLoading}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black shadow-xs cursor-pointer transition disabled:opacity-50"
+                      >
+                        Khôi phục
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteLocalSnapshot(snap.id)}
+                        disabled={backupLoading}
+                        className="p-1.5 rounded-xl hover:bg-rose-100 text-rose-600 transition cursor-pointer"
+                        title="Xóa bản chụp"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <hr className="border-slate-100" />

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ClassNewsItem, ClassInfo, NewsAttachment, Student } from '../types';
+import { uploader } from '../services/uploader';
 import {
   Megaphone,
   Pin,
@@ -373,7 +374,16 @@ export const ClassNewsView: React.FC<ClassNewsViewProps> = ({
   const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    Array.from(files).forEach((file) => {
+    Array.from(files).forEach(async (file) => {
+      try {
+        const res = await uploader.uploadFile(file, { compressImage: true, maxDimension: 1400 });
+        if (res.success && res.url) {
+          setFormImages((prev) => [...prev, res.url]);
+          return;
+        }
+      } catch (err) {
+        console.debug('Direct stream upload notice, using fallback:', err);
+      }
       const reader = new FileReader();
       reader.onload = (uploadEvent) => {
         const result = uploadEvent.target?.result as string;

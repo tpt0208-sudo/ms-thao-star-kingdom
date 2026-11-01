@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LearningResource, LibraryCategory } from '../types';
+import { uploader, UploadProgressInfo } from '../services/uploader';
 import {
   BookOpen,
   Video,
@@ -154,6 +155,8 @@ export const LearningLibraryView: React.FC<LearningLibraryViewProps> = ({
   const [uploadedThumbnailName, setUploadedThumbnailName] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
   const [thumbnailLoading, setThumbnailLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgressInfo | null>(null);
+  const [thumbnailProgress, setThumbnailProgress] = useState<UploadProgressInfo | null>(null);
 
   // 4 Categories specification (Video, Hình ảnh, Sách truyện, Khác)
   const categories: Array<{
@@ -247,69 +250,63 @@ export const LearningLibraryView: React.FC<LearningLibraryViewProps> = ({
       setNewTitle(file.name.replace(/\.[^/.]+$/, ''));
     }
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      if (typeof evt.target?.result === 'string') {
-        setNewUrl(evt.target.result);
+    // High performance binary stream upload (Zero-RAM streaming directly to server disk)
+    try {
+      const res = await uploader.uploadFile(file, {
+        onProgress: (p) => setUploadProgress(p),
+      });
+      if (res.success && res.url) {
+        setNewUrl(res.url);
+      } else {
+        throw new Error(res.error || 'Lỗi tải tệp lên máy chủ');
       }
+    } catch (err) {
+      console.warn('Stream upload encountered issue, falling back to local reader:', err);
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        if (typeof evt.target?.result === 'string') {
+          setNewUrl(evt.target.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
       setUploadLoading(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   // Handle Thumbnail / Cover Image File Upload
-  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setThumbnailLoading(true);
     setUploadedThumbnailName(file.name);
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      if (typeof evt.target?.result === 'string') {
-        const rawData = evt.target.result;
-        // Optimize thumbnail dimension via canvas
-        const img = new Image();
-        img.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            const maxDim = 800;
-            let w = img.width;
-            let h = img.height;
-            if (w > maxDim || h > maxDim) {
-              if (w > h) {
-                h = Math.round((h / w) * maxDim);
-                w = maxDim;
-              } else {
-                w = Math.round((w / h) * maxDim);
-                h = maxDim;
-              }
-            }
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-              ctx.drawImage(img, 0, 0, w, h);
-              setNewThumbnail(canvas.toDataURL('image/jpeg', 0.85));
-            } else {
-              setNewThumbnail(rawData);
-            }
-          } catch {
-            setNewThumbnail(rawData);
-          }
-          setThumbnailLoading(false);
-        };
-        img.onerror = () => {
-          setNewThumbnail(rawData);
-          setThumbnailLoading(false);
-        };
-        img.src = rawData;
+    try {
+      // High-performance WebP/JPEG client compression + binary streaming
+      const res = await uploader.uploadFile(file, {
+        compressImage: true,
+        maxDimension: 1200,
+        quality: 0.85,
+        onProgress: (p) => setThumbnailProgress(p),
+      });
+      if (res.success && res.url) {
+        setNewThumbnail(res.url);
       } else {
-        setThumbnailLoading(false);
+        throw new Error(res.error || 'Lỗi tải ảnh bìa');
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.warn('Direct thumbnail upload error, using canvas fallback:', err);
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        if (typeof evt.target?.result === 'string') {
+          setNewThumbnail(evt.target.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setThumbnailLoading(false);
+    }
   };
 
   const handleCreateResource = async (e: React.FormEvent) => {
@@ -815,10 +812,10 @@ export const LearningLibraryView: React.FC<LearningLibraryViewProps> = ({
                 Tải lên video hoặc tệp từ thiết bị (MP4, PDF, Word, PowerPoint, Ảnh, Âm thanh)
               </p>
               <p className="text-[10px] text-slate-500 mb-2">
-                Hỗ trợ định dạng: .mp4, .webm, .pdf, .doc, .docx, .ppt, .pptx, .png, .jpg, .mp3
+                Hỗ trợ định dạng: .mp4, .webm, .pdf, .doc, .docx, .ppt, .pptx, .png, .jpg, .mp3 • Luồng truyền tải Binary Stream tốc độ cao
               </p>
               <label className="inline-block px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-black shadow-xs cursor-pointer transition">
-                <span>{uploadLoading ? 'Đang đọc tệp video/tài liệu...' : '📁 Chọn tệp từ máy'}</span>
+                <span>{uploadLoading ? 'Đang truyền dữ liệu máy chủ...' : '📁 Chọn tệp từ máy'}</span>
                 <input
                   type="file"
                   accept=".mp4,.webm,.mov,.pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.webp,.mp3,.wav"
@@ -826,10 +823,35 @@ export const LearningLibraryView: React.FC<LearningLibraryViewProps> = ({
                   className="hidden"
                 />
               </label>
-              {uploadedFileName && (
+
+              {/* Real-time Progress Bar */}
+              {uploadLoading && uploadProgress && (
+                <div className="mt-3 p-3 bg-white rounded-xl border border-sky-200 shadow-xs text-left max-w-md mx-auto">
+                  <div className="flex items-center justify-between text-xs font-bold text-sky-900 mb-1.5">
+                    <span>
+                      {uploadProgress.status === 'preparing' && '⏳ Đang chuẩn bị tệp...'}
+                      {uploadProgress.status === 'uploading' && `🚀 Đang tải lên: ${uploadProgress.progress}%`}
+                      {uploadProgress.status === 'processing' && '⚙️ Đang xử lý trên máy chủ...'}
+                      {uploadProgress.status === 'completed' && '✅ Tải lên hoàn tất!'}
+                      {uploadProgress.status === 'error' && '❌ Lỗi khi tải lên'}
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-semibold">
+                      {(((uploadProgress.bytesUploaded ?? uploadProgress.loadedBytes) || 0) / (1024 * 1024)).toFixed(1)} / {((uploadProgress.totalBytes || 1) / (1024 * 1024)).toFixed(1)} MB
+                    </span>
+                  </div>
+                  <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-sky-500 to-indigo-600 transition-all duration-150 rounded-full"
+                      style={{ width: `${uploadProgress.progress ?? uploadProgress.percent ?? 0}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {uploadedFileName && !uploadLoading && (
                 <p className="text-xs font-bold text-emerald-700 mt-2 bg-emerald-50 py-1 px-2.5 rounded-lg inline-flex items-center gap-1.5 border border-emerald-200">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Đã chọn: {uploadedFileName}</span>
+                  <span>Đã tải lên bền vững: {uploadedFileName}</span>
                 </p>
               )}
             </div>
@@ -893,7 +915,13 @@ export const LearningLibraryView: React.FC<LearningLibraryViewProps> = ({
                   type="text"
                   required
                   placeholder="Dán link YouTube (VD: https://www.youtube.com/watch?v=...) hoặc tải file phía trên"
-                  value={newUrl.length > 80 && newUrl.startsWith('data:') ? `[Dữ liệu tệp đính kèm: ${uploadedFileName}]` : newUrl}
+                  value={
+                    newUrl.startsWith('/uploads/')
+                      ? `[Tệp lưu trữ an toàn]: ${uploadedFileName || newUrl}`
+                      : newUrl.length > 80 && newUrl.startsWith('data:')
+                      ? `[Dữ liệu tệp đính kèm: ${uploadedFileName}]`
+                      : newUrl
+                  }
                   onChange={(e) => handleUrlChange(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500"
                 />
@@ -924,7 +952,7 @@ export const LearningLibraryView: React.FC<LearningLibraryViewProps> = ({
                 <div className="flex flex-col sm:flex-row items-center gap-2">
                   <label className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black shadow-xs cursor-pointer transition flex items-center justify-center gap-1.5 shrink-0">
                     <Upload className="w-3.5 h-3.5" />
-                    <span>{thumbnailLoading ? 'Đang nén ảnh...' : 'Tải ảnh bìa từ máy'}</span>
+                    <span>{thumbnailLoading ? 'Đang nén & tải ảnh...' : 'Tải ảnh bìa từ máy'}</span>
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp,image/jpg"
@@ -936,11 +964,26 @@ export const LearningLibraryView: React.FC<LearningLibraryViewProps> = ({
                   <input
                     type="text"
                     placeholder="Hoặc dán URL ảnh bìa (https://...)"
-                    value={newThumbnail.startsWith('data:image') ? '[Ảnh bìa tải lên từ máy]' : newThumbnail}
+                    value={
+                      newThumbnail.startsWith('/uploads/')
+                        ? `[Ảnh bìa máy chủ]: ${uploadedThumbnailName || newThumbnail}`
+                        : newThumbnail.startsWith('data:image')
+                        ? '[Ảnh bìa tải lên từ máy]'
+                        : newThumbnail
+                    }
                     onChange={(e) => setNewThumbnail(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-white border border-amber-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500"
                   />
                 </div>
+
+                {thumbnailLoading && thumbnailProgress && (
+                  <div className="w-full h-1.5 bg-amber-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-amber-500 transition-all duration-150 rounded-full"
+                      style={{ width: `${thumbnailProgress.progress}%` }}
+                    />
+                  </div>
+                )}
 
                 {/* Thumbnail Preview Card */}
                 {newThumbnail && (

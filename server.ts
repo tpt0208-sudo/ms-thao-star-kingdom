@@ -16,6 +16,56 @@ const DB_FILE = process.env.DB_FILE
     ? path.resolve(DATA_DIR, 'demo_db.json')
     : path.resolve(DATA_DIR, 'db.json'));
 
+const UPLOAD_DIR = path.resolve(DATA_DIR, 'uploads');
+const BACKUP_DIR = path.resolve(DATA_DIR, 'backups');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+
+// Static serving for uploaded media & documents with 7-day browser caching
+app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d', immutable: true }));
+
+// High-Speed Streaming Binary Upload Endpoint (Bypasses JSON parsing for zero-RAM streaming)
+app.post('/api/upload/stream', (req: Request, res: Response) => {
+  const origName = decodeURIComponent((req.headers['x-file-name'] as string) || `upload_${Date.now()}`);
+  const mimeType = (req.headers['content-type'] as string) || 'application/octet-stream';
+  const ext = path.extname(origName) || '.bin';
+  const safeBase = origName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 40);
+  const fileId = `file_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const storedFileName = `${fileId}_${safeBase}${ext}`;
+  const targetPath = path.join(UPLOAD_DIR, storedFileName);
+
+  const writeStream = fs.createWriteStream(targetPath);
+  let totalBytes = 0;
+
+  req.on('data', (chunk) => {
+    totalBytes += chunk.length;
+  });
+
+  req.pipe(writeStream);
+
+  writeStream.on('finish', () => {
+    const fileUrl = `/uploads/${storedFileName}`;
+    res.json({
+      success: true,
+      file: {
+        id: fileId,
+        fileName: origName,
+        storedName: storedFileName,
+        url: fileUrl,
+        mimeType,
+        size: totalBytes,
+        uploadedAt: new Date().toISOString(),
+      },
+    });
+  });
+
+  writeStream.on('error', (err) => {
+    console.error('File stream error:', err);
+    res.status(500).json({ success: false, error: 'Lỗi ghi tệp lên máy chủ' });
+  });
+});
+
 // ---------------- SECURITY & RBAC CONFIGURATION ----------------
 const SESSION_SECRET = process.env.SESSION_SECRET || 'starkingdom-hmac-secret-key-2026-thulam';
 
@@ -773,11 +823,46 @@ function loadDb(): AppState {
   return defaultState;
 }
 
+let lastSavedTimestamp = new Date().toISOString();
+let lastSnapshotTime = 0;
+
 function saveDb(state: AppState) {
   try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(state, null, 2), 'utf-8');
+    const tmpPath = `${DB_FILE}.tmp`;
+    const raw = JSON.stringify(state, null, 2);
+    fs.writeFileSync(tmpPath, raw, 'utf-8');
+    fs.renameSync(tmpPath, DB_FILE);
+    lastSavedTimestamp = new Date().toISOString();
+
+    // Auto-snapshot every 15 minutes or when data changes
+    const now = Date.now();
+    if (now - lastSnapshotTime > 15 * 60 * 1000) {
+      lastSnapshotTime = now;
+      try {
+        const snapPath = path.join(BACKUP_DIR, `snapshot_${new Date().toISOString().slice(0, 10)}.json`);
+        fs.writeFileSync(snapPath, raw, 'utf-8');
+      } catch (_) {}
+    }
+
+    // Synchronize core canonical data into demo_db.json so cold-starts are always up-to-date
+    try {
+      const demoPath = path.resolve(DATA_DIR, 'demo_db.json');
+      if (fs.existsSync(demoPath)) {
+        const demoBase = JSON.parse(fs.readFileSync(demoPath, 'utf-8'));
+        demoBase.school = state.school;
+        demoBase.classInfo = state.classInfo;
+        demoBase.classes = state.classes;
+        demoBase.teams = state.teams;
+        demoBase.students = state.students;
+        demoBase.news = state.news;
+        demoBase.learningResources = state.learningResources;
+        demoBase.levelRules = state.levelRules;
+        demoBase.academicConfig = state.academicConfig;
+        fs.writeFileSync(demoPath, JSON.stringify(demoBase, null, 2), 'utf-8');
+      }
+    } catch (_) {}
   } catch (err) {
-    console.error('Error saving DB file:', err);
+    console.error('Error saving DB file atomically:', err);
   }
 }
 
@@ -3068,6 +3153,153 @@ app.post('/api/restore', (req: Request, res: Response) => {
   } catch (err: unknown) {
     res.status(500).json({ success: false, error: err instanceof Error ? err.message : 'Lỗi khi khôi phục' });
   }
+});
+
+// Restore/hydrate database from client's durable IndexedDB if server cold-started with empty or older demo state
+app.post('/api/sync/hydrate-from-client', (req: Request, res: Response) => {
+  const { clientState } = req.body;
+  if (!clientState || !Array.isArray(clientState.students)) {
+    res.status(400).json({ success: false, error: 'Dữ liệu client không hợp lệ' });
+    return;
+  }
+
+  // Basic sanity check: Client state should have school info and classes
+  if (!clientState.school || !clientState.classInfo) {
+    res.status(400).json({ success: false, error: 'Dữ liệu thiếu cấu trúc trường/lớp' });
+    return;
+  }
+
+  dbState = {
+    ...clientState,
+    learningResources: Array.isArray(clientState.learningResources) && clientState.learningResources.length > 0
+      ? clientState.learningResources
+      : dbState.learningResources,
+  };
+
+  saveDb(dbState);
+  console.log(`[Hydration] Successfully hydrated server state from client with ${dbState.students.length} students, ${dbState.news.length} news, ${dbState.learningResources.length} resources.`);
+
+  res.json({ success: true, message: 'Đã khôi phục dữ liệu từ bộ nhớ bền vững của bạn!', data: dbState });
+});
+
+// Comprehensive System Health & Performance Monitoring Endpoint
+app.get('/api/system/health', (_req: Request, res: Response) => {
+  let dbSizeKB = 0;
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      dbSizeKB = Math.round((fs.statSync(DB_FILE).size / 1024) * 10) / 10;
+    }
+  } catch (_) {}
+
+  let uploadsCount = 0;
+  let uploadsTotalSizeMB = 0;
+  try {
+    if (fs.existsSync(UPLOAD_DIR)) {
+      const files = fs.readdirSync(UPLOAD_DIR);
+      uploadsCount = files.length;
+      let totalBytes = 0;
+      files.forEach(f => {
+        try {
+          totalBytes += fs.statSync(path.join(UPLOAD_DIR, f)).size;
+        } catch (_) {}
+      });
+      uploadsTotalSizeMB = Math.round((totalBytes / (1024 * 1024)) * 10) / 10;
+    }
+  } catch (_) {}
+
+  let snapshotsCount = 0;
+  try {
+    if (fs.existsSync(BACKUP_DIR)) {
+      snapshotsCount = fs.readdirSync(BACKUP_DIR).filter(f => f.endsWith('.json')).length;
+    }
+  } catch (_) {}
+
+  const mem = process.memoryUsage();
+
+  res.json({
+    success: true,
+    health: {
+      serverStatus: 'online',
+      uptimeSeconds: Math.floor(process.uptime()),
+      memoryUsageMB: Math.round((mem.rss / (1024 * 1024)) * 10) / 10,
+      heapUsedMB: Math.round((mem.heapUsed / (1024 * 1024)) * 10) / 10,
+      dbSizeKB,
+      recordsCount: {
+        classes: dbState.classes?.length || 0,
+        students: dbState.students?.length || 0,
+        teams: dbState.teams?.length || 0,
+        news: dbState.news?.length || 0,
+        learningResources: dbState.learningResources?.length || 0,
+        starTransactions: dbState.starTransactions?.length || 0,
+      },
+      uploadsCount,
+      uploadsTotalSizeMB,
+      lastSavedTimestamp,
+      snapshotsCount,
+    },
+  });
+});
+
+// 1-Click Export Complete Backup JSON
+app.get('/api/backup/export', (_req: Request, res: Response) => {
+  const exportPayload = {
+    appVersion: '2.9.0',
+    exportedAt: new Date().toISOString(),
+    school: dbState.school,
+    classes: dbState.classes,
+    currentClassId: dbState.currentClassId,
+    classInfo: dbState.classInfo,
+    teams: dbState.teams,
+    students: dbState.students,
+    starTransactions: dbState.starTransactions,
+    badges: dbState.badges,
+    rewards: dbState.rewards,
+    redemptions: dbState.redemptions,
+    attendance: dbState.attendance,
+    seatingChart: dbState.seatingChart,
+    news: dbState.news,
+    learningResources: dbState.learningResources,
+    levelRules: dbState.levelRules,
+    academicConfig: dbState.academicConfig,
+    finalizedResults: dbState.finalizedResults,
+    auditLogs: dbState.auditLogs,
+    kingdomAvatarUrl: dbState.kingdomAvatarUrl,
+    sidebarMascotUrl: dbState.sidebarMascotUrl,
+  };
+
+  const filename = `MsThao_StarKingdom_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(JSON.stringify(exportPayload, null, 2));
+});
+
+// Import Complete Backup JSON
+app.post('/api/backup/import', (req: Request, res: Response) => {
+  const { backupPayload } = req.body;
+  if (!backupPayload || !Array.isArray(backupPayload.students) || !backupPayload.school) {
+    res.status(400).json({ success: false, error: 'Tệp sao lưu không đúng định dạng Vương quốc ngôi sao' });
+    return;
+  }
+
+  // Create an automatic safety snapshot before restoring
+  try {
+    const safetySnapshotPath = path.join(BACKUP_DIR, `pre_restore_safety_${Date.now()}.json`);
+    fs.writeFileSync(safetySnapshotPath, JSON.stringify(dbState, null, 2), 'utf-8');
+  } catch (_) {}
+
+  // Apply imported data
+  dbState = {
+    ...dbState,
+    ...backupPayload,
+    backups: dbState.backups || [],
+  };
+
+  saveDb(dbState);
+  res.json({
+    success: true,
+    message: `Đã khôi phục thành công ${dbState.students.length} học sinh và ${dbState.classes.length} lớp học!`,
+    data: dbState,
+  });
 });
 
 // Public Health Check Endpoint for Cloud Monitoring & Probes (Render/Railway/Fly.io)
